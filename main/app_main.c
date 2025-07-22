@@ -1,8 +1,9 @@
 #include "board.h"
 #include "components/drivers/include/i2c.h"
-#include "driver/i2c_master.h"
+#include "components/tsl2561/include/tsl2561.h"
 #include "driver/i2c_types.h"
 #include "esp_err.h"
+#include "esp_log.h"
 #include "freertos/FreeRTOS.h" // IWYU pragma: keep - required before other FreeRTOS headers
 #include "freertos/projdefs.h"
 #include "freertos/task.h"
@@ -11,17 +12,21 @@
 #include <stdint.h>
 #include <stdio.h>
 
+static const char *TAG = "APP_MAIN";
+
 i2c_master_bus_handle_t i2c_mst_bus;
 i2c_master_dev_handle_t tsl2561_dev_handle;
 
-void hello_task(void *pvParameter) {
+tsl2561_t tsl2561_instance;
+
+void read_tsl2561_task(void *pvParameter) {
+  uint16_t ch0 = 0;
   while (1) {
-    uint8_t reg = 0x8C;
-    uint8_t data[2] = {0};
-    ESP_ERROR_CHECK(i2c_master_transmit_receive(tsl2561_dev_handle, &reg, 1,
-                                                data, 2, 1000));
-    uint16_t channel0 = (data[1] << 8) | data[0];
-    printf("TSL2561 Channel 0: %u\n", channel0);
+    esp_err_t err = tsl2561_read_ch0(&tsl2561_instance, &ch0, 1000);
+    if (err != ESP_OK)
+      ESP_LOGE(TAG, "error reading tsl2561 sensor");
+
+    printf("TSL2561 Channel 0: %u\n", ch0);
     vTaskDelay(pdMS_TO_TICKS(1000));
   }
 }
@@ -32,10 +37,9 @@ void app_main(void) {
   ESP_ERROR_CHECK(
       i2c_add_device(i2c_mst_bus, 0x39, 100000, &tsl2561_dev_handle));
 
-  uint8_t power_cmd[2] = {0x80, 0x03};
-  ESP_ERROR_CHECK(i2c_master_transmit(tsl2561_dev_handle, power_cmd, 2, 1000));
+  ESP_ERROR_CHECK(tsl2561_init(&tsl2561_instance, tsl2561_dev_handle, 1000));
 
   rgb_led_init();
 
-  xTaskCreate(&hello_task, "hello_task", 2048, NULL, 5, NULL);
+  xTaskCreate(&read_tsl2561_task, "read_tsl2561_task", 2048, NULL, 5, NULL);
 }
