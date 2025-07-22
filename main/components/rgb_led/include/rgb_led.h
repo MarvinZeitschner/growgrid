@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+// TODO: Change to esp_err_t
+
 /**
  *  @brief Initializes onboard led-strip with GPIO8 with 10MHz resolution
  *

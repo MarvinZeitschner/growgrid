@@ -5,6 +5,7 @@
 #include "esp_err.h"
 #include "hal/i2c_types.h"
 #include "soc/gpio_num.h"
+#include <stddef.h>
 #include <stdint.h>
 
 /**
