@@ -20,11 +20,11 @@ i2c_master_dev_handle_t tsl2561_dev_handle;
 tsl2561_t tsl2561;
 
 void read_tsl2561_task(void *pvParameter) {
-  uint16_t ch0 = 0, ch1 = 0;
   while (1) {
-    esp_err_t err = tsl2561_read_channels(&tsl2561, &ch0, &ch1, 1000);
+    uint32_t lux = 0;
+    esp_err_t err = tsl2561_read_lux(&tsl2561, &lux, 1000);
     if (err == ESP_OK) {
-      printf("TSL2561: CH0 (Visible+IR) = %u, CH1 (IR only) = %u\n", ch0, ch1);
+      printf("Ambient light: %" PRIu32 " lux\n", lux);
     } else {
       ESP_LOGE(TAG, "Failed to read TSL2561: %s", esp_err_to_name(err));
     }

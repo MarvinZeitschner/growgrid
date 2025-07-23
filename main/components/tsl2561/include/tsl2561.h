@@ -28,6 +28,86 @@ extern "C" {
 #define TSL2561_CMD_POWER_ON 0x03  ///< Power on value for CONTROL register
 #define TSL2561_CMD_POWER_OFF 0x00 ///< Power off value for CONTROL register
 
+#define TSL2561_LUX_SCALE 14  // scale by 2^14
+#define TSL2561_RATIO_SCALE 9 // scale ratio by 2^9
+// −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
+//  Integration time scaling factors
+// −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
+#define TSL2561_CH_SCALE 10          // scale channel values by 2^10
+#define TSL2561_CHSCALE_TINT0 0x7517 // 322/11 * 2^CH_SCALE
+#define TSL2561_CHSCALE_TINT1 0x0fe7 // 322/81 * 2^CH_SCALE
+
+// −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
+//  T Package coefficients
+// −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
+#define TSL2561_K1T 0x0040 // 0.125 * 2^RATIO_SCALE
+#define TSL2561_B1T 0x01f2 // 0.0304 * 2^LUX_SCALE
+#define TSL2561_M1T 0x01be // 0.0272 * 2^LUX_SCALE
+
+#define TSL2561_K2T 0x0080 // 0.250 * 2^RATIO_SCALE
+#define TSL2561_B2T 0x0214 // 0.0325 * 2^LUX_SCALE
+#define TSL2561_M2T 0x02d1 // 0.0440 * 2^LUX_SCALE
+
+#define TSL2561_K3T 0x00c0 // 0.375 * 2^RATIO_SCALE
+#define TSL2561_B3T 0x023f // 0.0351 * 2^LUX_SCALE
+#define TSL2561_M3T 0x037b // 0.0544 * 2^LUX_SCALE
+
+#define TSL2561_K4T 0x0100 // 0.50 * 2^RATIO_SCALE
+#define TSL2561_B4T 0x0270 // 0.0381 * 2^LUX_SCALE
+#define TSL2561_M4T 0x03fe // 0.0624 * 2^LUX_SCALE
+
+#define TSL2561_K5T 0x0138 // 0.61 * 2^RATIO_SCALE
+#define TSL2561_B5T 0x016f // 0.0224 * 2^LUX_SCALE
+#define TSL2561_M5T 0x01fc // 0.0310 * 2^LUX_SCALE
+
+#define TSL2561_K6T 0x019a // 0.80 * 2^RATIO_SCALE
+#define TSL2561_B6T 0x00d2 // 0.0128 * 2^LUX_SCALE
+#define TSL2561_M6T 0x00fb // 0.0153 * 2^LUX_SCALE
+
+#define TSL2561_K7T 0x029a // 1.3 * 2^RATIO_SCALE
+#define TSL2561_B7T 0x0018 // 0.00146 * 2^LUX_SCALE
+#define TSL2561_M7T 0x0012 // 0.00112 * 2^LUX_SCALE
+
+#define TSL2561_K8T 0x029a // 1.3 * 2^RATIO_SCALE
+#define TSL2561_B8T 0x0000 // 0.000 * 2^LUX_SCALE
+#define TSL2561_M8T 0x0000 // 0.000 * 2^LUX_SCALE
+
+// −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
+//  CS package coefficients
+// −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
+#define TSL2561_K1C 0x0043 // 0.130 * 2^RATIO_SCALE
+#define TSL2561_B1C 0x0204 // 0.0315 * 2^LUX_SCALE
+#define TSL2561_M1C 0x01ad // 0.0262 * 2^LUX_SCALE
+
+#define TSL2561_K2C 0x0085 // 0.260 * 2^RATIO_SCALE
+#define TSL2561_B2C 0x0228 // 0.0337 * 2^LUX_SCALE
+#define TSL2561_M2C 0x02c1 // 0.0430 * 2^LUX_SCALE
+
+#define TSL2561_K3C 0x00c8 // 0.390 * 2^RATIO_SCALE
+#define TSL2561_B3C 0x0253 // 0.0363 * 2^LUX_SCALE
+#define TSL2561_M3C 0x0363 // 0.0529 * 2^LUX_SCALE
+
+#define TSL2561_K4C 0x010a // 0.520 * 2^RATIO_SCALE
+#define TSL2561_B4C 0x0282 // 0.0392 * 2^LUX_SCALE
+#define TSL2561_M4C 0x03df // 0.0605 * 2^LUX_SCALE
+
+#define TSL2561_K5C 0x014d // 0.65 * 2^RATIO_SCALE
+#define TSL2561_B5C 0x0177 // 0.0229 * 2^LUX_SCALE
+#define TSL2561_M5C 0x01dd // 0.0291 * 2^LUX_SCALE
+
+#define TSL2561_K6C 0x019a // 0.80 * 2^RATIO_SCALE
+#define TSL2561_B6C 0x0101 // 0.0157 * 2^LUX_SCALE
+#define TSL2561_M6C 0x0127 // 0.0180 * 2^LUX_SCALE
+
+#define TSL2561_K7C 0x029a // 1.3 * 2^RATIO_SCALE
+#define TSL2561_B7C 0x0037 // 0.00338 * 2^LUX_SCALE
+#define TSL2561_M7C 0x002b // 0.00260 * 2^LUX_SCALE
+
+#define TSL2561_K8C 0x029a // 1.3 * 2^RATIO_SCALE
+#define TSL2561_B8C 0x0000 // 0.000 * 2^LUX_SCALE
+#define TSL2561_M8C 0x0000 // 0.000 * 2^LUX_SCALE
+// −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
+
 /**
  * @brief Integration time options for the TSL2561
  *
@@ -81,6 +161,7 @@ typedef struct {
  * @param[in]  config      Pointer to configuration struct (integration time,
  * gain)
  * @param[in]  timeout     I2C operation timeout in milliseconds
+ *
  * @return ESP_OK on success, or an error code from the I2C driver
  */
 esp_err_t tsl2561_init(tsl2561_t *sensor, i2c_master_dev_handle_t dev_handle,
@@ -93,6 +174,7 @@ esp_err_t tsl2561_init(tsl2561_t *sensor, i2c_master_dev_handle_t dev_handle,
  *
  * @param[in] sensor   Pointer to initialized TSL2561 device handle
  * @param[in] timeout  I2C operation timeout in milliseconds
+ *
  * @return ESP_OK on success, or an error code from the I2C driver
  */
 esp_err_t tsl2561_power_off(tsl2561_t *sensor, int timeout);
@@ -105,6 +187,7 @@ esp_err_t tsl2561_power_off(tsl2561_t *sensor, int timeout);
  * @param[in,out] sensor  Pointer to initialized TSL2561 device handle
  * @param[in]     config  Pointer to new configuration struct
  * @param[in]     timeout I2C operation timeout in milliseconds
+ *
  * @return ESP_OK on success, or an error code from the I2C driver
  */
 esp_err_t tsl2561_set_config(tsl2561_t *sensor, const tsl2561_config_t *config,
@@ -120,10 +203,24 @@ esp_err_t tsl2561_set_config(tsl2561_t *sensor, const tsl2561_config_t *config,
  * @param[out] ch0      Pointer to store channel 0 value
  * @param[out] ch1      Pointer to store channel 1 value
  * @param[in]  timeout  I2C operation timeout in milliseconds
+ *
  * @return ESP_OK on success, or an error code from the I2C driver
  */
 esp_err_t tsl2561_read_channels(tsl2561_t *sensor, uint16_t *ch0, uint16_t *ch1,
                                 int timeout);
+
+/**
+ * @brief Read light level in lux
+ *
+ * Reads both channels and calculates light in lux.
+ *
+ * @param[in]  sensor   Pointer to initialized TSL2561 device handle
+ * @param[out] lux      Pointer to store calculated lux value
+ * @param[in]  timeout  I2C operation timeout in milliseconds
+ *
+ * @return ESP_OK on success, or an error code from the I2C driver
+ */
+esp_err_t tsl2561_read_lux(tsl2561_t *sensor, uint32_t *lux, int timeout);
 
 #ifdef __cplusplus
 }
