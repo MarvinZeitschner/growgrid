@@ -147,8 +147,34 @@ typedef struct {
 typedef struct {
   tsl2561_integration_time_t integration_time;
   tsl2561_gain_t gain;
-  i2c_bus_device_handle_t dev_handle;
-} tsl2561_handle_t;
+  i2c_bus_device_handle_t i2c_dev;
+  uint8_t dev_addr;
+} tsl2561_dev_t;
+
+typedef void *tsl2561_handle_t; /*handle of tsl2561*/
+
+/**
+ * @brief   Create bmp280 handle_t
+ *
+ * @param  object handle of I2C
+ * @param  device address
+ *
+ * @return
+ *     - bmp280_handle_t
+ */
+tsl2561_handle_t tsl2561_create(i2c_bus_handle_t bus, uint8_t dev_addr);
+
+/**
+ * @brief   delete bmp280 handle_t
+ *
+ * @param  point to object handle of bmp280
+ * @param  whether delete i2c bus
+ *
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_FAIL Fail
+ */
+esp_err_t tsl2561_delete(tsl2561_handle_t *sensor);
 
 /**
  * @brief Initialize the TSL2561 sensor
@@ -159,13 +185,21 @@ typedef struct {
  * @param[in]  dev_handle  ESP-IDF I2C device handle
  * @param[in]  config      Pointer to configuration struct (integration time,
  * gain)
- * @param[in]  timeout     I2C operation timeout in milliseconds
  *
  * @return ESP_OK on success, or an error code from the I2C driver
  */
-esp_err_t tsl2561_init(tsl2561_handle_t *sensor,
-                       i2c_bus_device_handle_t dev_handle,
-                       const tsl2561_config_t *config, int timeout);
+esp_err_t tsl2561_default_init(tsl2561_handle_t sensor);
+
+/**
+ * @brief Power on the TSL2561 sensor
+ *
+ * Puts the sensor into a high-power state.
+ *
+ * @param[in] sensor   Pointer to initialized TSL2561 device handle
+ *
+ * @return ESP_OK on success, or an error code from the I2C driver
+ */
+esp_err_t tsl2561_power_on(tsl2561_handle_t sensor);
 
 /**
  * @brief Power off the TSL2561 sensor
@@ -173,11 +207,10 @@ esp_err_t tsl2561_init(tsl2561_handle_t *sensor,
  * Puts the sensor into a low-power state.
  *
  * @param[in] sensor   Pointer to initialized TSL2561 device handle
- * @param[in] timeout  I2C operation timeout in milliseconds
  *
  * @return ESP_OK on success, or an error code from the I2C driver
  */
-esp_err_t tsl2561_power_off(tsl2561_handle_t *sensor, int timeout);
+esp_err_t tsl2561_power_off(tsl2561_handle_t sensor);
 
 /**
  * @brief Set integration time and gain
@@ -186,12 +219,11 @@ esp_err_t tsl2561_power_off(tsl2561_handle_t *sensor, int timeout);
  *
  * @param[in,out] sensor  Pointer to initialized TSL2561 device handle
  * @param[in]     config  Pointer to new configuration struct
- * @param[in]     timeout I2C operation timeout in milliseconds
  *
  * @return ESP_OK on success, or an error code from the I2C driver
  */
-esp_err_t tsl2561_set_config(tsl2561_handle_t *sensor,
-                             const tsl2561_config_t *config, int timeout);
+esp_err_t tsl2561_set_config(tsl2561_handle_t sensor,
+                             const tsl2561_config_t config);
 
 /**
  * @brief Read raw ADC values from both channels
@@ -202,12 +234,11 @@ esp_err_t tsl2561_set_config(tsl2561_handle_t *sensor,
  * @param[in]  sensor   Pointer to initialized TSL2561 device handle
  * @param[out] ch0      Pointer to store channel 0 value
  * @param[out] ch1      Pointer to store channel 1 value
- * @param[in]  timeout  I2C operation timeout in milliseconds
  *
  * @return ESP_OK on success, or an error code from the I2C driver
  */
-esp_err_t tsl2561_read_channels(tsl2561_handle_t *sensor, uint16_t *ch0,
-                                uint16_t *ch1, int timeout);
+esp_err_t tsl2561_read_channels(tsl2561_handle_t sensor, uint16_t *ch0,
+                                uint16_t *ch1);
 
 /**
  * @brief Read light level in lux
@@ -216,12 +247,10 @@ esp_err_t tsl2561_read_channels(tsl2561_handle_t *sensor, uint16_t *ch0,
  *
  * @param[in]  sensor   Pointer to initialized TSL2561 device handle
  * @param[out] lux      Pointer to store calculated lux value
- * @param[in]  timeout  I2C operation timeout in milliseconds
  *
  * @return ESP_OK on success, or an error code from the I2C driver
  */
-esp_err_t tsl2561_read_lux(tsl2561_handle_t *sensor, uint32_t *lux,
-                           int timeout);
+esp_err_t tsl2561_read_lux(tsl2561_handle_t sensor, uint32_t *lux);
 
 #ifdef __cplusplus
 }
