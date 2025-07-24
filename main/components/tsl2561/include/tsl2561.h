@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "driver/i2c_types.h"
 #include "esp_err.h"
+#include "i2c_bus.h"
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -147,8 +147,8 @@ typedef struct {
 typedef struct {
   tsl2561_integration_time_t integration_time;
   tsl2561_gain_t gain;
-  i2c_master_dev_handle_t dev_handle;
-} tsl2561_t;
+  i2c_bus_device_handle_t dev_handle;
+} tsl2561_handle_t;
 
 /**
  * @brief Initialize the TSL2561 sensor
@@ -156,15 +156,15 @@ typedef struct {
  * Powers on the sensor and sets integration time and gain.
  *
  * @param[out] sensor      Pointer to TSL2561 device handle to initialize
- * @param[in]  dev_handle  ESP-IDF I2C device handle (from
- * i2c_master_bus_add_device)
+ * @param[in]  dev_handle  ESP-IDF I2C device handle
  * @param[in]  config      Pointer to configuration struct (integration time,
  * gain)
  * @param[in]  timeout     I2C operation timeout in milliseconds
  *
  * @return ESP_OK on success, or an error code from the I2C driver
  */
-esp_err_t tsl2561_init(tsl2561_t *sensor, i2c_master_dev_handle_t dev_handle,
+esp_err_t tsl2561_init(tsl2561_handle_t *sensor,
+                       i2c_bus_device_handle_t dev_handle,
                        const tsl2561_config_t *config, int timeout);
 
 /**
@@ -177,7 +177,7 @@ esp_err_t tsl2561_init(tsl2561_t *sensor, i2c_master_dev_handle_t dev_handle,
  *
  * @return ESP_OK on success, or an error code from the I2C driver
  */
-esp_err_t tsl2561_power_off(tsl2561_t *sensor, int timeout);
+esp_err_t tsl2561_power_off(tsl2561_handle_t *sensor, int timeout);
 
 /**
  * @brief Set integration time and gain
@@ -190,8 +190,8 @@ esp_err_t tsl2561_power_off(tsl2561_t *sensor, int timeout);
  *
  * @return ESP_OK on success, or an error code from the I2C driver
  */
-esp_err_t tsl2561_set_config(tsl2561_t *sensor, const tsl2561_config_t *config,
-                             int timeout);
+esp_err_t tsl2561_set_config(tsl2561_handle_t *sensor,
+                             const tsl2561_config_t *config, int timeout);
 
 /**
  * @brief Read raw ADC values from both channels
@@ -206,8 +206,8 @@ esp_err_t tsl2561_set_config(tsl2561_t *sensor, const tsl2561_config_t *config,
  *
  * @return ESP_OK on success, or an error code from the I2C driver
  */
-esp_err_t tsl2561_read_channels(tsl2561_t *sensor, uint16_t *ch0, uint16_t *ch1,
-                                int timeout);
+esp_err_t tsl2561_read_channels(tsl2561_handle_t *sensor, uint16_t *ch0,
+                                uint16_t *ch1, int timeout);
 
 /**
  * @brief Read light level in lux
@@ -220,7 +220,8 @@ esp_err_t tsl2561_read_channels(tsl2561_t *sensor, uint16_t *ch0, uint16_t *ch1,
  *
  * @return ESP_OK on success, or an error code from the I2C driver
  */
-esp_err_t tsl2561_read_lux(tsl2561_t *sensor, uint32_t *lux, int timeout);
+esp_err_t tsl2561_read_lux(tsl2561_handle_t *sensor, uint32_t *lux,
+                           int timeout);
 
 #ifdef __cplusplus
 }
