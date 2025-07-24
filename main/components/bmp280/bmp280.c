@@ -12,6 +12,8 @@
 #include "i2c_bus.h"
 #include "math.h"
 
+static const char *TAG = "BMP280";
+
 bmp280_handle_t bmp280_create(i2c_bus_handle_t bus, uint8_t dev_addr) {
   bmp280_dev_t *sens = (bmp280_dev_t *)calloc(1, sizeof(bmp280_dev_t));
   sens->i2c_dev =
@@ -166,15 +168,14 @@ esp_err_t bmp280_default_init(bmp280_handle_t sensor) {
   bmp280_dev_t *sens = (bmp280_dev_t *)sensor;
   if (i2c_bus_read_byte(sens->i2c_dev, BMP280_REGISTER_CHIPID, &chipid) !=
       ESP_OK) {
-    ESP_LOGI("bmp280:",
+    ESP_LOGI(TAG,
              "bmp280_default_init->bmp280_read_byte ->bmp280_REGISTER_CHIPID "
              "failed!!!!:%x",
              chipid);
     return ESP_FAIL;
   }
   if (chipid != BMP280_DEFAULT_CHIPID) {
-    ESP_LOGI("bmp280:", "bmp280_default_init->bmp280_DEFAULT_CHIPID:%x",
-             chipid);
+    ESP_LOGI(TAG, "bmp280_default_init->bmp280_DEFAULT_CHIPID:%x", chipid);
     return ESP_FAIL;
   }
   // reset the sens using soft-reset, this makes sure the IIR is off, etc.
@@ -197,6 +198,9 @@ esp_err_t bmp280_default_init(bmp280_handle_t sensor) {
                           BMP280_STANDBY_MS_0_5) != ESP_OK) { // use defaults
     return ESP_FAIL;
   }
+
+  ESP_LOGI(TAG, "bmp280 initiated");
+
   return ESP_OK;
 }
 

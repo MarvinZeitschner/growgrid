@@ -54,24 +54,49 @@ void i2c_configure() {
   i2c_bus = i2c_bus_create(I2C_PORT, &conf);
 }
 
-void tsl2561_configure() {
+esp_err_t tsl2561_configure() {
   tsl2561 = tsl2561_create(i2c_bus, TSL2561_I2C_ADDR);
-  ESP_ERROR_CHECK(tsl2561_default_init(tsl2561));
+  return tsl2561_default_init(tsl2561);
 }
 
-void bmp280_configure() {
+esp_err_t bmp280_configure() {
   bmp280 = bmp280_create(i2c_bus, BMP280_I2C_ADDRESS_DEFAULT);
-  ESP_ERROR_CHECK(bmp280_default_init(bmp280));
+  return bmp280_default_init(bmp280);
 }
 
 void app_main(void) {
   i2c_configure();
-  tsl2561_configure();
-  bmp280_configure();
-  rgb_led_init();
 
-  // Wait for sensors to become stable (esp. bmp280)
-  vTaskDelay(pdMS_TO_TICKS(100));
+  esp_err_t err;
+  if (rgb_led__default_init()) {
+    ESP_LOGE(TAG, "RGB LED init failed");
+    return;
+  }
+  ESP_ERROR_CHECK(rgb_led_set_color(0, 255, 0));
 
-  xTaskCreate(&read_sensors_task, "read_sensors_task", 4096, NULL, 5, NULL);
+  err = tsl2561_configure();
+  if (err != ESP_OK) {
+    rgb_led_set_color(255, 0, 0);
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    return;
+  }
+
+  err = bmp280_configure();
+  if (err != ESP_OK) {
+    rgb_led_set_color(255, 0, 0);
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    return;
+  }
+
+  vTaskDelay(pdMS_TO_TICKS(1000)); // Wait for sensors to stabilize
+  ESP_ERROR_CHECK(rgb_led_clear());
+
+  BaseType_t result =
+      xTaskCreate(&read_sensors_task, "read_sensors_task", 4096, NULL, 5, NULL);
+
+  if (result != pdPASS) {
+    ESP_LOGE(TAG, "Failed to create read_sensors_task (error: %d)", result);
+    rgb_led_set_color(255, 0, 0);
+    return;
+  }
 }

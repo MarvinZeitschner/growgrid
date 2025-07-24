@@ -44,7 +44,15 @@ esp_err_t tsl2561_default_init(tsl2561_handle_t sensor) {
     return err;
   }
 
-  return tsl2561_power_on(sensor);
+  err = tsl2561_power_on(sensor);
+  if (err != ESP_OK) {
+    ESP_LOGE(TAG, "Error powering tsl2561 on");
+    return err;
+  }
+
+  ESP_LOGI(TAG, "bmp280 initiated");
+
+  return ESP_OK;
 }
 
 esp_err_t tsl2561_power_on(tsl2561_handle_t sensor) {
