@@ -8,11 +8,12 @@
 #include "hal/adc_types.h"
 #include "hal/i2c_types.h"
 #include "i2c_bus.h"
-#include "portmacro.h"
 #include "rgb_led.h"
 #include "soc/gpio_num.h"
 #include "soil_sensor.h"
 #include "tsl2561.h"
+#include "wifi.h"
+#include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -108,9 +109,10 @@ void soil_sensor_configure() {
 }
 
 void app_main(void) {
+  ESP_ERROR_CHECK(wifi_init_sta());
+
   i2c_configure();
 
-  esp_err_t err;
   if (rgb_led__default_init()) {
     ESP_LOGE(TAG, "RGB LED init failed");
     return;
@@ -119,44 +121,18 @@ void app_main(void) {
 
   soil_sensor_configure();
 
-  err = tsl2561_configure();
-  if (err != ESP_OK) {
-    rgb_led_set_color(255, 0, 0);
-    vTaskDelay(pdMS_TO_TICKS(1000));
-    return;
-  }
+  assert(tsl2561_configure() == ESP_OK);
 
-  err = bmp280_configure();
-  if (err != ESP_OK) {
-    rgb_led_set_color(255, 0, 0);
-    vTaskDelay(pdMS_TO_TICKS(1000));
-    return;
-  }
+  assert(bmp280_configure() == ESP_OK);
 
   vTaskDelay(pdMS_TO_TICKS(1000)); // Wait for sensors to stabilize
   ESP_ERROR_CHECK(rgb_led_clear());
 
-  BaseType_t result =
-      xTaskCreate(&read_light, "read_light", 2048, NULL, 4, NULL);
-  if (result != pdPASS) {
-    ESP_LOGE(TAG, "Failed to create read_light (error: %d)", result);
-    rgb_led_set_color(255, 0, 0);
-    return;
-  }
+  assert(xTaskCreate(&read_light, "read_light", 2048, NULL, 4, NULL) == pdTRUE);
 
-  result =
-      xTaskCreate(&read_temperature, "read_temperature", 2048, NULL, 4, NULL);
-  if (result != pdPASS) {
-    ESP_LOGE(TAG, "Failed to create read_temperature (error: %d)", result);
-    rgb_led_set_color(255, 0, 0);
-    return;
-  }
+  assert(xTaskCreate(&read_temperature, "read_temperature", 2048, NULL, 4,
+                     NULL) == pdTRUE);
 
-  result = xTaskCreate(&read_soil_moisture, "read_soil_moisture", 2048, NULL, 5,
-                       NULL);
-  if (result != pdPASS) {
-    ESP_LOGE(TAG, "Failed to create read_soil_moisture (error: %d)", result);
-    rgb_led_set_color(255, 0, 0);
-    return;
-  }
+  assert(xTaskCreate(&read_soil_moisture, "read_soil_moisture", 2048, NULL, 5,
+                     NULL) == pdTRUE);
 }
