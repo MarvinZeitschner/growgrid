@@ -1,16 +1,12 @@
 idf_component_register(
   SRCS
   "app_main.c"
-  "wifi.c"
-  "mqtt.c"
-  INCLUDE_DIRS
-  "."
   REQUIRES
-  esp_wifi
-  nvs_flash
-  mqtt
+  wifi_manager
+  mqtt_manager
+  bus_manager
+  bmp280_service
+  tsl2561_service
+  soil_sensor_service
   rgb_led
-  tsl2561
-  bmp280
-  soil_sensor
-  utils)
+  nvs_flash)

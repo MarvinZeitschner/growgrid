@@ -1,0 +1,9 @@
+idf_component_register(
+  SRCS
+  "soil_sensor_service.c"
+  INCLUDE_DIRS
+  "include"
+  REQUIRES
+  soil_sensor
+  sensor_aggregator
+  board)

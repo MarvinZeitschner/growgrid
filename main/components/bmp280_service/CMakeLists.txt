@@ -1,0 +1,9 @@
+idf_component_register(
+  SRCS
+  "bmp280_service.c"
+  INCLUDE_DIRS
+  "include"
+  REQUIRES
+  bmp280
+  sensor_aggregator
+  bus_manager)

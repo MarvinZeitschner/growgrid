@@ -1,0 +1,9 @@
+idf_component_register(
+  SRCS
+  "tsl2561_service.c"
+  INCLUDE_DIRS
+  "include"
+  REQUIRES
+  tsl2561
+  sensor_aggregator
+  bus_manager)
