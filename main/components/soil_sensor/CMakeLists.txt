@@ -1,10 +1,9 @@
 idf_component_register(
   SRCS
   "soil_sensor.c"
-  "../../utils/map_value.c"
   INCLUDE_DIRS
   "include"
-  "../../utils/"
   REQUIRES
   esp_adc
-  board)
+  board
+  utils)

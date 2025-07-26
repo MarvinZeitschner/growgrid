@@ -296,7 +296,7 @@ esp_err_t bmp280_read_pressure(bmp280_handle_t sensor, float *pressure) {
   return ESP_OK;
 }
 
-esp_err_t bme280_read_altitude(bmp280_handle_t sensor, float seaLevel,
+esp_err_t bmp280_read_altitude(bmp280_handle_t sensor, float seaLevel,
                                float *altitude) {
   float pressure = 0.0;
   float temp = 0.0;

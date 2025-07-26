@@ -38,3 +38,5 @@ void mqtt_app_start(void) {
                                  NULL);
   esp_mqtt_client_start(client);
 }
+
+esp_mqtt_client_handle_t get_mqtt_client(void) { return client; }

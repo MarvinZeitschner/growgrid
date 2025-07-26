@@ -1,12 +1,10 @@
 idf_component_register(
   SRCS
   "app_main.c"
-  "utils/map_value.c"
   "wifi.c"
   "mqtt.c"
   INCLUDE_DIRS
   "."
-  "utils"
   REQUIRES
   esp_wifi
   nvs_flash
@@ -14,4 +12,5 @@ idf_component_register(
   rgb_led
   tsl2561
   bmp280
-  soil_sensor)
+  soil_sensor
+  utils)

@@ -110,31 +110,23 @@ void soil_sensor_configure() {
 }
 
 void app_main(void) {
-  assert(wifi_init_sta() == ESP_OK);
+  ESP_ERROR_CHECK(wifi_init_sta());
   mqtt_app_start();
 
   i2c_configure();
 
-  if (rgb_led__default_init()) {
-    ESP_LOGE(TAG, "RGB LED init failed");
-    return;
-  }
+  ESP_ERROR_CHECK(rgb_led__default_init());
   ESP_ERROR_CHECK(rgb_led_set_color(0, 255, 0));
 
   soil_sensor_configure();
 
-  assert(tsl2561_configure() == ESP_OK);
-
-  assert(bmp280_configure() == ESP_OK);
+  ESP_ERROR_CHECK(tsl2561_configure());
+  ESP_ERROR_CHECK(bmp280_configure());
 
   vTaskDelay(pdMS_TO_TICKS(1000)); // Wait for sensors to stabilize
   ESP_ERROR_CHECK(rgb_led_clear());
 
-  assert(xTaskCreate(&read_light, "read_light", 2048, NULL, 4, NULL) == pdTRUE);
-
-  assert(xTaskCreate(&read_temperature, "read_temperature", 2048, NULL, 4,
-                     NULL) == pdTRUE);
-
-  assert(xTaskCreate(&read_soil_moisture, "read_soil_moisture", 2048, NULL, 5,
-                     NULL) == pdTRUE);
+  ESP_ERROR_CHECK(xTaskCreate(&read_light, "read_light", 2048, NULL, 4, NULL) == pdTRUE ? ESP_OK : ESP_FAIL);
+  ESP_ERROR_CHECK(xTaskCreate(&read_temperature, "read_temperature", 2048, NULL, 4, NULL) == pdTRUE ? ESP_OK : ESP_FAIL);
+  ESP_ERROR_CHECK(xTaskCreate(&read_soil_moisture, "read_soil_moisture", 2048, NULL, 5, NULL) == pdTRUE ? ESP_OK : ESP_FAIL);
 }
