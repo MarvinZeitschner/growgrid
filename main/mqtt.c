@@ -6,6 +6,7 @@
 
 static const char *TAG = "MQTT";
 static esp_mqtt_client_handle_t client = NULL;
+static bool g_mqtt_connected = false;
 
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
                                int32_t event_id, void *event_data) {
@@ -13,9 +14,11 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
   switch ((esp_mqtt_event_id_t)event_id) {
   case MQTT_EVENT_CONNECTED:
     ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
+    g_mqtt_connected = true;
     break;
   case MQTT_EVENT_DISCONNECTED:
     ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
+    g_mqtt_connected = false;
     break;
   case MQTT_EVENT_DATA:
     ESP_LOGI(TAG, "MQTT_EVENT_DATA: %.*s = %.*s", event->topic_len,
@@ -40,3 +43,5 @@ void mqtt_app_start(void) {
 }
 
 esp_mqtt_client_handle_t get_mqtt_client(void) { return client; }
+
+bool mqtt_is_connected(void) { return g_mqtt_connected; }

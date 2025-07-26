@@ -2,6 +2,7 @@
 #include "board.h"
 #include "esp_err.h"
 #include "esp_log.h"
+#include "esp_task_wdt.h"
 #include "freertos/FreeRTOS.h" // IWYU pragma: keep - required before other FreeRTOS headers
 #include "freertos/projdefs.h"
 #include "freertos/task.h"
@@ -14,7 +15,6 @@
 #include "soil_sensor.h"
 #include "tsl2561.h"
 #include "wifi.h"
-#include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -28,6 +28,8 @@ bmp280_handle_t bmp280;
 soil_sensor_handle_t soil_sensor;
 
 void read_light(void *pvParameter) {
+  esp_task_wdt_add(NULL);
+
   while (1) {
     uint32_t lux = 0;
     esp_err_t err = tsl2561_read_lux(tsl2561, &lux);
@@ -37,11 +39,14 @@ void read_light(void *pvParameter) {
       ESP_LOGE(TAG, "Failed to read TSL2561: %s\n", esp_err_to_name(err));
     }
 
+    esp_task_wdt_reset();
     vTaskDelay(pdMS_TO_TICKS(2000));
   }
 }
 
 void read_temperature(void *pvParameter) {
+  esp_task_wdt_add(NULL);
+
   while (1) {
     float temperature = 0.0;
     esp_err_t err = bmp280_read_temperature(bmp280, &temperature);
@@ -51,17 +56,22 @@ void read_temperature(void *pvParameter) {
       ESP_LOGE(TAG, "Failed to read bmp280 temp: %s\n", esp_err_to_name(err));
     }
 
+    esp_task_wdt_reset();
     vTaskDelay(pdMS_TO_TICKS(2000));
   }
 }
 
 void read_soil_moisture(void *pvParameter) {
+  esp_task_wdt_add(NULL);
+
   while (1) {
     int percent = 0, raw = 0;
     soil_sensor_read_raw(soil_sensor, &raw);
     soil_sensor_read_percent(soil_sensor, &percent);
     printf("Soil sensor raw value: %d\n", raw);
     printf("Soil sensor mapped value: %d\n", percent);
+
+    esp_task_wdt_reset();
     vTaskDelay(pdMS_TO_TICKS(2000));
   }
 }
@@ -126,7 +136,16 @@ void app_main(void) {
   vTaskDelay(pdMS_TO_TICKS(1000)); // Wait for sensors to stabilize
   ESP_ERROR_CHECK(rgb_led_clear());
 
-  ESP_ERROR_CHECK(xTaskCreate(&read_light, "read_light", 2048, NULL, 4, NULL) == pdTRUE ? ESP_OK : ESP_FAIL);
-  ESP_ERROR_CHECK(xTaskCreate(&read_temperature, "read_temperature", 2048, NULL, 4, NULL) == pdTRUE ? ESP_OK : ESP_FAIL);
-  ESP_ERROR_CHECK(xTaskCreate(&read_soil_moisture, "read_soil_moisture", 2048, NULL, 5, NULL) == pdTRUE ? ESP_OK : ESP_FAIL);
+  ESP_ERROR_CHECK(xTaskCreate(&read_light, "read_light", 2048, NULL, 4, NULL) ==
+                          pdTRUE
+                      ? ESP_OK
+                      : ESP_FAIL);
+  ESP_ERROR_CHECK(xTaskCreate(&read_temperature, "read_temperature", 2048, NULL,
+                              4, NULL) == pdTRUE
+                      ? ESP_OK
+                      : ESP_FAIL);
+  ESP_ERROR_CHECK(xTaskCreate(&read_soil_moisture, "read_soil_moisture", 2048,
+                              NULL, 5, NULL) == pdTRUE
+                      ? ESP_OK
+                      : ESP_FAIL);
 }
