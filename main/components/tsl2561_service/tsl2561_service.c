@@ -26,11 +26,9 @@ static void read_light_task(void *pvParameter) {
 
   ESP_ERROR_CHECK(esp_task_wdt_add(NULL));
   sensor_data_t data = {.type = DATA_TYPE_LUX};
-  uint32_t lux = 0;
 
   while (1) {
-    if (tsl2561_read_lux(tsl_handle, &lux) == ESP_OK) {
-      data.value = (float)lux;
+    if (tsl2561_read_lux(tsl_handle, &data.i_value) == ESP_OK) {
       xQueueSend(data_queue, &data, portMAX_DELAY);
     }
     esp_task_wdt_reset();

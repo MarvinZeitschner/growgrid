@@ -72,15 +72,15 @@ static void mqtt_publisher_task(void *pvParameter) {
         switch (data.type) {
         case DATA_TYPE_LUX:
           strcpy(topic, "growgrid/light");
-          snprintf(payload, sizeof(payload), "%" PRIu32, (uint32_t)data.value);
+          snprintf(payload, sizeof(payload), "%d", data.i_value);
           break;
         case DATA_TYPE_TEMPERATURE:
           strcpy(topic, "growgrid/temperature");
-          snprintf(payload, sizeof(payload), "%.2f", data.value);
+          snprintf(payload, sizeof(payload), "%.2f", data.f_value);
           break;
         case DATA_TYPE_SOIL_MOISTURE:
           strcpy(topic, "growgrid/soil_moisture");
-          snprintf(payload, sizeof(payload), "%d", (int)data.value);
+          snprintf(payload, sizeof(payload), "%d", (int)data.i_value);
           break;
         }
         ESP_LOGI(TAG, "Publishing to %s: %s", topic, payload);

@@ -250,7 +250,7 @@ esp_err_t tsl2561_read_channels(tsl2561_handle_t sensor, uint16_t *ch0,
  *
  * @return ESP_OK on success, or an error code from the I2C driver
  */
-esp_err_t tsl2561_read_lux(tsl2561_handle_t sensor, uint32_t *lux);
+esp_err_t tsl2561_read_lux(tsl2561_handle_t sensor, int *lux);
 
 #ifdef __cplusplus
 }

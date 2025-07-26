@@ -11,5 +11,8 @@ typedef enum {
 
 typedef struct {
   sensor_data_type_t type;
-  float value;
+  union {
+    float f_value;
+    int i_value;
+  };
 } sensor_data_t;

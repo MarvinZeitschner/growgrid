@@ -102,7 +102,7 @@ esp_err_t tsl2561_read_channels(tsl2561_handle_t sensor, uint16_t *ch0,
   return ESP_OK;
 }
 
-esp_err_t tsl2561_read_lux(tsl2561_handle_t sensor, uint32_t *lux) {
+esp_err_t tsl2561_read_lux(tsl2561_handle_t sensor, int *lux) {
   tsl2561_dev_t *sens = (tsl2561_dev_t *)sensor;
 
   uint16_t ch0 = 0, ch1 = 0;

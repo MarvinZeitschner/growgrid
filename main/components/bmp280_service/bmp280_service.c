@@ -33,7 +33,7 @@ static void read_temperature_task(void *pvParameter) {
   vTaskDelay(pdMS_TO_TICKS(1000));
 
   while (1) {
-    if (bmp280_read_temperature(bmp280_handle, &data.value) == ESP_OK) {
+    if (bmp280_read_temperature(bmp280_handle, &data.f_value) == ESP_OK) {
       xQueueSend(data_queue, &data, portMAX_DELAY);
     }
     esp_task_wdt_reset();

@@ -21,11 +21,9 @@ static void read_soil_moisture_task(void *pvParameter) {
 
   ESP_ERROR_CHECK(esp_task_wdt_add(NULL));
   sensor_data_t data = {.type = DATA_TYPE_SOIL_MOISTURE};
-  int percent = 0;
 
   while (1) {
-    if (soil_sensor_read_percent(soil_handle, &percent) == ESP_OK) {
-      data.value = (float)percent;
+    if (soil_sensor_read_percent(soil_handle, &data.i_value) == ESP_OK) {
       xQueueSend(data_queue, &data, portMAX_DELAY);
     }
     esp_task_wdt_reset();
