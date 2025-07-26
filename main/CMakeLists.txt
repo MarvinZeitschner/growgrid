@@ -9,4 +9,4 @@ idf_component_register(
   rgb_led
   tsl2561
   bmp280
-  esp_adc)
+  soil_sensor)
