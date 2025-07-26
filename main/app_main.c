@@ -8,6 +8,7 @@
 #include "hal/adc_types.h"
 #include "hal/i2c_types.h"
 #include "i2c_bus.h"
+#include "mqtt.h"
 #include "rgb_led.h"
 #include "soc/gpio_num.h"
 #include "soil_sensor.h"
@@ -109,7 +110,8 @@ void soil_sensor_configure() {
 }
 
 void app_main(void) {
-  ESP_ERROR_CHECK(wifi_init_sta());
+  assert(wifi_init_sta() == ESP_OK);
+  mqtt_app_start();
 
   i2c_configure();
 

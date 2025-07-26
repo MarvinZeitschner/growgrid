@@ -10,6 +10,7 @@ idf_component_register(
   REQUIRES
   esp_wifi
   nvs_flash
+  mqtt
   rgb_led
   tsl2561
   bmp280
