@@ -1,9 +1,12 @@
 idf_component_register(
   SRCS
   "app_main.c"
+  "utils/map_value.c"
   INCLUDE_DIRS
   "."
+  "utils"
   REQUIRES
   rgb_led
   tsl2561
-  bmp280)
+  bmp280
+  esp_adc)

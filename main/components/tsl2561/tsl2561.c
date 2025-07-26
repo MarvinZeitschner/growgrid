@@ -50,7 +50,7 @@ esp_err_t tsl2561_default_init(tsl2561_handle_t sensor) {
     return err;
   }
 
-  ESP_LOGI(TAG, "bmp280 initiated");
+  ESP_LOGI(TAG, "tsl2561 initiated");
 
   return ESP_OK;
 }

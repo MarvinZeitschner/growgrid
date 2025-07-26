@@ -1,12 +1,16 @@
 #include "bmp280.h"
 #include "board.h"
+#include "esp_adc/adc_oneshot.h"
 #include "esp_err.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h" // IWYU pragma: keep - required before other FreeRTOS headers
 #include "freertos/projdefs.h"
 #include "freertos/task.h"
+#include "hal/adc_types.h"
 #include "hal/i2c_types.h"
 #include "i2c_bus.h"
+#include "map_value.h"
+#include "portmacro.h"
 #include "rgb_led.h"
 #include "tsl2561.h"
 #include <stdint.h>
@@ -14,30 +18,53 @@
 
 static const char *TAG = "APP_MAIN";
 
+adc_oneshot_unit_handle_t adc1_handle;
+
 i2c_bus_handle_t i2c_bus;
 i2c_bus_device_handle_t tsl2561_dev_handle;
 
 tsl2561_handle_t tsl2561;
 bmp280_handle_t bmp280;
 
-void read_sensors_task(void *pvParameter) {
+void read_light(void *pvParameter) {
   while (1) {
     uint32_t lux = 0;
     esp_err_t err = tsl2561_read_lux(tsl2561, &lux);
     if (err == ESP_OK) {
       printf("Ambient light: %" PRIu32 " lux\n", lux);
     } else {
-      ESP_LOGE(TAG, "Failed to read TSL2561: %s", esp_err_to_name(err));
+      ESP_LOGE(TAG, "Failed to read TSL2561: %s\n", esp_err_to_name(err));
     }
 
+    vTaskDelay(pdMS_TO_TICKS(2000));
+  }
+}
+
+void read_temperature(void *pvParameter) {
+  while (1) {
     float temperature = 0.0;
-    err = bmp280_read_temperature(bmp280, &temperature);
+    esp_err_t err = bmp280_read_temperature(bmp280, &temperature);
     if (err == ESP_OK) {
       printf("Temperature: %f deg\n", temperature);
     } else {
       ESP_LOGE(TAG, "Failed to read bmp280 temp: %s\n", esp_err_to_name(err));
     }
 
+    vTaskDelay(pdMS_TO_TICKS(2000));
+  }
+}
+
+void read_soil_moisture(void *pvParameter) {
+  while (1) {
+    int raw = 0;
+    esp_err_t err = adc_oneshot_read(adc1_handle, SOIL_ADC_CHANNEL, &raw);
+    if (err != ESP_OK) {
+      ESP_LOGE(TAG, "Failed to read soil moisture adc: %s\n",
+               esp_err_to_name(err));
+    }
+    printf("Soil sensor raw value: %d\n", raw);
+    printf("Soil sensor mapped value: %d\n",
+           map_value(raw, SOIL_OUT_MIN, SOIL_OUT_MAX, 100, 0));
     vTaskDelay(pdMS_TO_TICKS(2000));
   }
 }
@@ -64,6 +91,23 @@ esp_err_t bmp280_configure() {
   return bmp280_default_init(bmp280);
 }
 
+esp_err_t adc1_configure() {
+  adc_oneshot_unit_init_cfg_t init_config1 = {
+      .unit_id = ADC_UNIT_1,
+      .ulp_mode = ADC_ULP_MODE_DISABLE,
+  };
+  adc_oneshot_chan_cfg_t config = {
+      .bitwidth = ADC_BITWIDTH_DEFAULT,
+      .atten = ADC_ATTEN_DB_12,
+  };
+
+  esp_err_t err = adc_oneshot_new_unit(&init_config1, &adc1_handle);
+  if (err != ESP_OK)
+    return err;
+
+  return adc_oneshot_config_channel(adc1_handle, SOIL_ADC_CHANNEL, &config);
+}
+
 void app_main(void) {
   i2c_configure();
 
@@ -73,6 +117,14 @@ void app_main(void) {
     return;
   }
   ESP_ERROR_CHECK(rgb_led_set_color(0, 255, 0));
+
+  err = adc1_configure();
+  if (err != ESP_OK) {
+    rgb_led_set_color(255, 0, 0);
+    ESP_LOGE(TAG, "ADC init failed");
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    return;
+  }
 
   err = tsl2561_configure();
   if (err != ESP_OK) {
@@ -92,10 +144,25 @@ void app_main(void) {
   ESP_ERROR_CHECK(rgb_led_clear());
 
   BaseType_t result =
-      xTaskCreate(&read_sensors_task, "read_sensors_task", 4096, NULL, 5, NULL);
-
+      xTaskCreate(&read_light, "read_light", 2048, NULL, 4, NULL);
   if (result != pdPASS) {
-    ESP_LOGE(TAG, "Failed to create read_sensors_task (error: %d)", result);
+    ESP_LOGE(TAG, "Failed to create read_light (error: %d)", result);
+    rgb_led_set_color(255, 0, 0);
+    return;
+  }
+
+  result =
+      xTaskCreate(&read_temperature, "read_temperature", 2048, NULL, 4, NULL);
+  if (result != pdPASS) {
+    ESP_LOGE(TAG, "Failed to create read_temperature (error: %d)", result);
+    rgb_led_set_color(255, 0, 0);
+    return;
+  }
+
+  result = xTaskCreate(&read_soil_moisture, "read_soil_moisture", 2048, NULL, 5,
+                       NULL);
+  if (result != pdPASS) {
+    ESP_LOGE(TAG, "Failed to create read_soil_moisture (error: %d)", result);
     rgb_led_set_color(255, 0, 0);
     return;
   }

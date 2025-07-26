@@ -8,4 +8,8 @@
 #define I2C_SCL_PIN GPIO_NUM_7
 #define I2C_FREQ_HZ 100000
 
+#define SOIL_ADC_CHANNEL ADC_CHANNEL_0
+#define SOIL_OUT_MAX 2200
+#define SOIL_OUT_MIN 900
+
 #endif
