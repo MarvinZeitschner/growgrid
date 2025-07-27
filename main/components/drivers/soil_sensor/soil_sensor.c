@@ -63,3 +63,13 @@ void soil_sensor_set_calibration(soil_sensor_handle_t sensor, int dry,
   sens->max = dry;
   sens->min = wet;
 }
+
+esp_err_t soil_sensor_delete(soil_sensor_handle_t *sensor) {
+  if (*sensor == NULL) {
+    return ESP_OK;
+  }
+  soil_sensor_dev_t *sens = (soil_sensor_dev_t *)(*sensor);
+  free(sens);
+  *sensor = NULL;
+  return ESP_OK;
+}

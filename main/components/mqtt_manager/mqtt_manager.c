@@ -3,6 +3,8 @@
 #include "cJSON.h"
 #include "esp_log.h"
 // #include "esp_task_wdt.h"
+#include "board.h"
+#include "esp_sleep.h"
 #include "freertos/idf_additions.h"
 #include "freertos/projdefs.h"
 #include "mqtt_client.h"
@@ -21,6 +23,7 @@ static TimerHandle_t s_reconnect_timer = NULL;
 static QueueSetHandle_t s_temp_queue = NULL;
 static QueueSetHandle_t s_lux_queue = NULL;
 static QueueSetHandle_t s_soil_queue = NULL;
+static EventGroupHandle_t s_event_group = NULL;
 
 static void reconnect_timer_callback(TimerHandle_t xTimer) {
   ESP_LOGE(
@@ -67,49 +70,73 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
 static void mqtt_publisher_task(void *pvParameter) {
   ESP_LOGI(TAG, "MQTT Publisher task started.");
 
+  while (!mqtt_manager_is_connected()) {
+    vTaskDelay(pdMS_TO_TICKS(10));
+  }
+
   float temperature = -999.f;
   int lux = -1;
   int soil = -1;
 
-  TickType_t x_last_wake_time = xTaskGetTickCount();
+  // TickType_t x_last_wake_time = xTaskGetTickCount();
 
-  while (1) {
+  // while (1) {
+  EventBits_t bits =
+      xEventGroupWaitBits(s_event_group, EVENT_SENSOR_ALL_BITS, pdTRUE, pdTRUE,
+                          pdMS_TO_TICKS(EVENT_SENSOR_WAIT_TIMEOUT_MS));
 
-    if (xQueuePeek(s_temp_queue, &temperature, 0) != pdPASS)
-      temperature = -999.0f;
-    if (xQueuePeek(s_lux_queue, &lux, 0) != pdPASS)
-      lux = -1.0f;
-    if (xQueuePeek(s_soil_queue, &soil, 0) != pdPASS)
-      soil = -1.0f;
+  if (bits & EVENT_SENSOR_TEMP_BIT)
+    xQueuePeek(s_temp_queue, &temperature, 0);
+  else
+    ESP_LOGW(TAG, "Temperature sensor did not respond!");
 
-    if (s_mqtt_connected) {
-      cJSON *root = cJSON_CreateObject();
-      if (temperature > -999.f)
-        cJSON_AddNumberToObject(root, "temperature", temperature);
-      if (lux > -1)
-        cJSON_AddNumberToObject(root, "light", lux);
-      if (soil > -1)
-        cJSON_AddNumberToObject(root, "soil_moisture", soil);
+  if (bits & EVENT_SENSOR_LUX_BIT)
+    xQueuePeek(s_lux_queue, &lux, 0);
+  else
+    ESP_LOGW(TAG, "Lux sensor did not respond!");
 
-      char *json_string = cJSON_Print(root);
-      if (json_string) {
-        ESP_LOGI(TAG, "Publishing: %s", json_string);
-        esp_mqtt_client_publish(s_client, TOPIC, json_string, 0, 1, 0);
-        free(json_string);
-      }
-      cJSON_Delete(root);
+  if (bits & EVENT_SENSOR_SOIL_BIT)
+    xQueuePeek(s_soil_queue, &soil, 0);
+  else
+    ESP_LOGW(TAG, "Soil sensor did not respond!");
+
+  if (s_mqtt_connected) {
+    cJSON *root = cJSON_CreateObject();
+    if (temperature > -999.f)
+      cJSON_AddNumberToObject(root, "temperature", temperature);
+    if (lux > -1)
+      cJSON_AddNumberToObject(root, "light", lux);
+    if (soil > -1)
+      cJSON_AddNumberToObject(root, "soil_moisture", soil);
+
+    char *json_string = cJSON_Print(root);
+    if (json_string) {
+      ESP_LOGI(TAG, "Publishing: %s", json_string);
+      esp_mqtt_client_publish(s_client, TOPIC, json_string, 0, 1, 0);
+      free(json_string);
     }
-
-    vTaskDelayUntil(&x_last_wake_time, pdMS_TO_TICKS(MQTT_PUBLISH_INTERVAL_MS));
+    cJSON_Delete(root);
   }
+
+  vTaskDelay(pdMS_TO_TICKS(2000));
+
+  ESP_LOGI(TAG, "Going into deep sleep");
+  esp_sleep_enable_timer_wakeup(SLEEP_TIME_SEC * 1000000ULL);
+  esp_deep_sleep_start();
+
+  // vTaskDelayUntil(&x_last_wake_time,
+  // pdMS_TO_TICKS(MQTT_PUBLISH_INTERVAL_MS));
+  // }
 }
 
 esp_err_t mqtt_manager_start(QueueSetHandle_t temp_queue,
                              QueueSetHandle_t lux_queue,
-                             QueueSetHandle_t soil_queue) {
+                             QueueSetHandle_t soil_queue,
+                             EventGroupHandle_t event_group) {
   s_temp_queue = temp_queue;
   s_lux_queue = lux_queue;
   s_soil_queue = soil_queue;
+  s_event_group = event_group;
 
   esp_mqtt_client_config_t mqtt_conf = {
       .broker.address.uri = MQTT_BROKER,

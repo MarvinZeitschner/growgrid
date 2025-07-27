@@ -9,11 +9,13 @@
 static const char *TAG = "SOIL_SERVICE";
 
 typedef struct {
+  EventGroupHandle_t event_group;
   QueueHandle_t data_queue;
 } task_params_t;
 
 static void read_soil_moisture_task(void *pvParameter) {
   task_params_t *p = (task_params_t *)pvParameter;
+  EventGroupHandle_t event_group = p->event_group;
   QueueHandle_t data_queue = p->data_queue;
   free(p);
 
@@ -28,24 +30,30 @@ static void read_soil_moisture_task(void *pvParameter) {
 
   int data = 0;
 
-  TickType_t x_last_wake_time = xTaskGetTickCount();
+  // TickType_t x_last_wake_time = xTaskGetTickCount();
 
-  while (1) {
-    if (soil_sensor_read_percent(soil_handle, &data) == ESP_OK) {
-      xQueueOverwrite(data_queue, &data);
-    }
-
-    vTaskDelayUntil(&x_last_wake_time,
-                    pdMS_TO_TICKS(SENSOR_POLLING_INTERVAL_MS));
+  // while (1) {
+  if (soil_sensor_read_percent(soil_handle, &data) == ESP_OK) {
+    xQueueOverwrite(data_queue, &data);
+    xEventGroupSetBits(event_group, EVENT_SENSOR_SOIL_BIT);
   }
+
+  //   vTaskDelayUntil(&x_last_wake_time,
+  //                   pdMS_TO_TICKS(SENSOR_POLLING_INTERVAL_MS));
+  // }
+
+  soil_sensor_delete(&soil_handle);
+  vTaskDelete(NULL);
 }
 
-esp_err_t soil_sensor_service_start(QueueHandle_t data_queue) {
+esp_err_t soil_sensor_service_start(QueueHandle_t data_queue,
+                                    EventGroupHandle_t event_group) {
   task_params_t *params = (task_params_t *)malloc(sizeof(task_params_t));
   if (params == NULL) {
     ESP_LOGE(TAG, "Failed to allocate memory for task parameters");
     return ESP_ERR_NO_MEM;
   }
+  params->event_group = event_group;
   params->data_queue = data_queue;
 
   xTaskCreate(&read_soil_moisture_task, "read_soil_moisture",

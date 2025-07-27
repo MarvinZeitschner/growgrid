@@ -4,6 +4,7 @@ idf_component_register(
   INCLUDE_DIRS
   "include"
   REQUIRES
+  board
   app_config
   bmp280
   bus_manager)

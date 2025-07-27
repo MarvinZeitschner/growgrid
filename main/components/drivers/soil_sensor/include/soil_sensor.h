@@ -67,6 +67,17 @@ esp_err_t soil_sensor_read_percent(soil_sensor_handle_t sensor, int *percent);
  */
 void soil_sensor_set_calibration(soil_sensor_handle_t sensor, int dry, int wet);
 
+/**
+ * @brief   delete soil handle_t
+ *
+ * @param  point to object handle of soil sensor
+ *
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_FAIL Fail
+ */
+esp_err_t soil_sensor_delete(soil_sensor_handle_t *sensor);
+
 #ifdef __cplusplus
 }
 #endif

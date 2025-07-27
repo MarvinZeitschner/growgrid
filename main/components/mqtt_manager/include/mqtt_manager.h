@@ -2,6 +2,7 @@
 
 #include "esp_err.h"
 #include "freertos/FreeRTOS.h" // IWYU pragma: keep - required before other FreeRTOS headers
+#include "freertos/idf_additions.h"
 #include "freertos/queue.h"
 #include <stdbool.h>
 
@@ -13,7 +14,8 @@
  */
 esp_err_t mqtt_manager_start(QueueSetHandle_t temp_queue,
                              QueueSetHandle_t lux_queue,
-                             QueueSetHandle_t soil_queue);
+                             QueueSetHandle_t soil_queue,
+                             EventGroupHandle_t event_group);
 
 /**
  * @brief Checks if the MQTT client is currently connected.
