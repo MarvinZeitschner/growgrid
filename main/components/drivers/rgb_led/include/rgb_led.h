@@ -9,7 +9,7 @@
  *
  *  @returns esp_err_t
  */
-esp_err_t rgb_led__default_init(void);
+esp_err_t rgb_led_default_init(void);
 
 /**
  *  @brief Set the color of the led-strip with RGB values

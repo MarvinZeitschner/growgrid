@@ -2,6 +2,7 @@ idf_component_register(
   SRCS
   "app_main.c"
   REQUIRES
+  app_config
   wifi_manager
   mqtt_manager
   bus_manager

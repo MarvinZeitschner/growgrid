@@ -8,7 +8,7 @@ static const char *TAG = "LED";
 
 static led_strip_handle_t led_strip;
 
-esp_err_t rgb_led__default_init(void) {
+esp_err_t rgb_led_default_init(void) {
 
   led_strip_config_t strip_config = {
       .strip_gpio_num = LED_RGB_GPIO,

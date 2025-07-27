@@ -1,14 +1,17 @@
 #include "mqtt_manager.h"
+#include "app_config.h"
+#include "cJSON.h"
 #include "esp_log.h"
-#include "esp_task_wdt.h"
-#include "freertos/timers.h"
+// #include "esp_task_wdt.h"
 #include "mqtt_client.h"
 #include "secrets.h"
 #include "sensor_aggregator.h"
-#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static const char *TAG = "MQTT_MANAGER";
+
+static const char *TOPIC = "growgrid/telemetry";
 
 static esp_mqtt_client_handle_t s_client = NULL;
 static QueueHandle_t s_sensor_data_queue;
@@ -59,34 +62,60 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
 
 static void mqtt_publisher_task(void *pvParameter) {
   ESP_LOGI(TAG, "MQTT Publisher task started.");
-  ESP_ERROR_CHECK(esp_task_wdt_add(NULL));
+  // ESP_ERROR_CHECK(esp_task_wdt_add(NULL));
+
+  struct {
+    float temperature;
+    int lux;
+    int soil_moisture;
+  } last_readings = {-999.f, -1, -1};
 
   sensor_data_t data;
-  char topic[64];
-  char payload[16];
 
   while (1) {
-    esp_task_wdt_reset();
-    if (xQueueReceive(s_sensor_data_queue, &data, portMAX_DELAY) == pdPASS) {
-      if (s_mqtt_connected) {
-        switch (data.type) {
-        case DATA_TYPE_LUX:
-          strcpy(topic, "growgrid/light");
-          snprintf(payload, sizeof(payload), "%d", data.i_value);
-          break;
-        case DATA_TYPE_TEMPERATURE:
-          strcpy(topic, "growgrid/temperature");
-          snprintf(payload, sizeof(payload), "%.2f", data.f_value);
-          break;
-        case DATA_TYPE_SOIL_MOISTURE:
-          strcpy(topic, "growgrid/soil_moisture");
-          snprintf(payload, sizeof(payload), "%d", (int)data.i_value);
-          break;
-        }
-        ESP_LOGI(TAG, "Publishing to %s: %s", topic, payload);
-        esp_mqtt_client_publish(s_client, topic, payload, 0, 1, 0);
+    // esp_task_wdt_reset();
+
+    while (xQueueReceive(s_sensor_data_queue, &data, 0) == pdPASS) {
+      switch (data.type) {
+      case DATA_TYPE_LUX:
+        ESP_LOGE(TAG, "Lux raw data: %d", data.i_value);
+        last_readings.lux = data.i_value;
+        break;
+      case DATA_TYPE_TEMPERATURE:
+        ESP_LOGE(TAG, "Temp raw data: %f", data.f_value);
+        last_readings.temperature = data.f_value;
+        break;
+      case DATA_TYPE_SOIL_MOISTURE:
+        ESP_LOGE(TAG, "Soil raw data: %d", data.i_value);
+        last_readings.soil_moisture = data.i_value;
+        break;
       }
     }
+
+    if (s_mqtt_connected) {
+      cJSON *root = cJSON_CreateObject();
+
+      if (last_readings.temperature > -999.f) {
+        cJSON_AddNumberToObject(root, "temperature", last_readings.temperature);
+      }
+      if (last_readings.lux > -1) {
+        cJSON_AddNumberToObject(root, "light", last_readings.lux);
+      }
+      if (last_readings.soil_moisture > -1) {
+        cJSON_AddNumberToObject(root, "soil_moisture",
+                                last_readings.soil_moisture);
+      }
+
+      char *json_string = cJSON_Print(root);
+      if (json_string) {
+        ESP_LOGI(TAG, "Publishing to %s: %s", TOPIC, json_string);
+        esp_mqtt_client_publish(s_client, TOPIC, json_string, 0, 1, 0);
+        free(json_string);
+      }
+      cJSON_Delete(root);
+    }
+
+    vTaskDelay(pdMS_TO_TICKS(MQTT_PUBLISH_INTERVAL_MS));
   }
 }
 

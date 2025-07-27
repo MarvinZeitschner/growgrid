@@ -33,7 +33,7 @@ esp_err_t tsl2561_delete(tsl2561_handle_t *sensor) {
 esp_err_t tsl2561_default_init(tsl2561_handle_t sensor) {
   tsl2561_dev_t *sens = (tsl2561_dev_t *)sensor;
 
-  sens->integration_time = TSL2561_INTEGRATION_402;
+  sens->integration_time = TSL2561_INTEGRATION_101;
   sens->gain = TSL2561_GAIN_1x;
 
   uint8_t timing = sens->gain | (sens->integration_time & 0x03);

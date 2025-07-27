@@ -4,6 +4,7 @@ idf_component_register(
   INCLUDE_DIRS
   "include"
   REQUIRES
+  app_config
   tsl2561
   sensor_aggregator
   bus_manager)

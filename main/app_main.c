@@ -1,3 +1,4 @@
+#include "app_config.h"
 #include "bmp280_service.h"
 #include "bus_manager.h"
 #include "esp_log.h"
@@ -26,7 +27,7 @@ void app_main(void) {
   ESP_ERROR_CHECK(ret);
 
   // Indicate startup
-  ESP_ERROR_CHECK(rgb_led__default_init());
+  ESP_ERROR_CHECK(rgb_led_default_init());
   ESP_ERROR_CHECK(rgb_led_set_color(0, 0, 255));
 
   // Start WiFi and wait for connection
@@ -39,7 +40,8 @@ void app_main(void) {
   ESP_ERROR_CHECK(bus_manager_init_i2c());
   i2c_bus_handle_t i2c_handle = bus_manager_get_i2c_handle();
 
-  QueueHandle_t sensor_data_queue = xQueueCreate(10, sizeof(sensor_data_t));
+  QueueHandle_t sensor_data_queue =
+      xQueueCreate(SENSOR_QUEUE_SIZE, sizeof(sensor_data_t));
   if (sensor_data_queue == NULL) {
     ESP_LOGE(TAG, "Failed to create sensor data queue.");
     esp_restart();

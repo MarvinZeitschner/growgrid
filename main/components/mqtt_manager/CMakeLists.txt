@@ -4,6 +4,8 @@ idf_component_register(
   INCLUDE_DIRS
   "include"
   REQUIRES
+  app_config
   mqtt
   sensor_aggregator
-  secrets)
+  secrets
+  json)
