@@ -1,6 +1,7 @@
 #include "tsl2561.h"
 #include "esp_err.h"
 #include "esp_log.h"
+#include "freertos/idf_additions.h"
 #include "i2c_bus.h"
 #include <stdint.h>
 
@@ -33,7 +34,7 @@ esp_err_t tsl2561_delete(tsl2561_handle_t *sensor) {
 esp_err_t tsl2561_default_init(tsl2561_handle_t sensor) {
   tsl2561_dev_t *sens = (tsl2561_dev_t *)sensor;
 
-  sens->integration_time = TSL2561_INTEGRATION_101;
+  sens->integration_time = TSL2561_INTEGRATION_402;
   sens->gain = TSL2561_GAIN_1x;
 
   uint8_t timing = sens->gain | (sens->integration_time & 0x03);
@@ -59,8 +60,21 @@ esp_err_t tsl2561_power_on(tsl2561_handle_t sensor) {
   tsl2561_dev_t *sens = (tsl2561_dev_t *)sensor;
 
   uint8_t data = TSL2561_CMD_POWER_ON;
-  return i2c_bus_write_byte(sens->i2c_dev, TSL2561_CMD | TSL2561_REG_CONTROL,
-                            data);
+  esp_err_t err = i2c_bus_write_byte(sens->i2c_dev,
+                                     TSL2561_CMD | TSL2561_REG_CONTROL, data);
+  if (err != ESP_OK)
+    return err;
+
+  uint8_t com_val = 0;
+  while ((com_val & 0x03) != 0x03) {
+    if (i2c_bus_read_byte(sens->i2c_dev, TSL2561_CMD | TSL2561_REG_CONTROL,
+                          &com_val) != ESP_OK) {
+      return ESP_FAIL;
+    }
+    vTaskDelay(100 / portTICK_RATE_MS);
+  }
+
+  return ESP_OK;
 }
 
 esp_err_t tsl2561_power_off(tsl2561_handle_t sensor) {
@@ -180,4 +194,10 @@ esp_err_t tsl2561_read_lux(tsl2561_handle_t sensor, int *lux) {
   *lux = temp >> TSL2561_LUX_SCALE;
 
   return ESP_OK;
+}
+
+tsl2561_integration_time_t
+tsl2561_get_integration_time(tsl2561_handle_t sensor) {
+  tsl2561_dev_t *sens = (tsl2561_dev_t *)sensor;
+  return sens->integration_time;
 }

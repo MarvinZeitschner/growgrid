@@ -3,9 +3,10 @@
 #include "cJSON.h"
 #include "esp_log.h"
 // #include "esp_task_wdt.h"
+#include "freertos/idf_additions.h"
+#include "freertos/projdefs.h"
 #include "mqtt_client.h"
 #include "secrets.h"
-#include "sensor_aggregator.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -14,9 +15,12 @@ static const char *TAG = "MQTT_MANAGER";
 static const char *TOPIC = "growgrid/telemetry";
 
 static esp_mqtt_client_handle_t s_client = NULL;
-static QueueHandle_t s_sensor_data_queue;
 static bool s_mqtt_connected = false;
 static TimerHandle_t s_reconnect_timer = NULL;
+
+static QueueSetHandle_t s_temp_queue = NULL;
+static QueueSetHandle_t s_lux_queue = NULL;
+static QueueSetHandle_t s_soil_queue = NULL;
 
 static void reconnect_timer_callback(TimerHandle_t xTimer) {
   ESP_LOGE(
@@ -62,65 +66,50 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
 
 static void mqtt_publisher_task(void *pvParameter) {
   ESP_LOGI(TAG, "MQTT Publisher task started.");
-  // ESP_ERROR_CHECK(esp_task_wdt_add(NULL));
 
-  struct {
-    float temperature;
-    int lux;
-    int soil_moisture;
-  } last_readings = {-999.f, -1, -1};
+  float temperature = -999.f;
+  int lux = -1;
+  int soil = -1;
 
-  sensor_data_t data;
+  TickType_t x_last_wake_time = xTaskGetTickCount();
 
   while (1) {
-    // esp_task_wdt_reset();
 
-    while (xQueueReceive(s_sensor_data_queue, &data, 0) == pdPASS) {
-      switch (data.type) {
-      case DATA_TYPE_LUX:
-        ESP_LOGE(TAG, "Lux raw data: %d", data.i_value);
-        last_readings.lux = data.i_value;
-        break;
-      case DATA_TYPE_TEMPERATURE:
-        ESP_LOGE(TAG, "Temp raw data: %f", data.f_value);
-        last_readings.temperature = data.f_value;
-        break;
-      case DATA_TYPE_SOIL_MOISTURE:
-        ESP_LOGE(TAG, "Soil raw data: %d", data.i_value);
-        last_readings.soil_moisture = data.i_value;
-        break;
-      }
-    }
+    if (xQueuePeek(s_temp_queue, &temperature, 0) != pdPASS)
+      temperature = -999.0f;
+    if (xQueuePeek(s_lux_queue, &lux, 0) != pdPASS)
+      lux = -1.0f;
+    if (xQueuePeek(s_soil_queue, &soil, 0) != pdPASS)
+      soil = -1.0f;
 
     if (s_mqtt_connected) {
       cJSON *root = cJSON_CreateObject();
-
-      if (last_readings.temperature > -999.f) {
-        cJSON_AddNumberToObject(root, "temperature", last_readings.temperature);
-      }
-      if (last_readings.lux > -1) {
-        cJSON_AddNumberToObject(root, "light", last_readings.lux);
-      }
-      if (last_readings.soil_moisture > -1) {
-        cJSON_AddNumberToObject(root, "soil_moisture",
-                                last_readings.soil_moisture);
-      }
+      if (temperature > -999.f)
+        cJSON_AddNumberToObject(root, "temperature", temperature);
+      if (lux > -1)
+        cJSON_AddNumberToObject(root, "light", lux);
+      if (soil > -1)
+        cJSON_AddNumberToObject(root, "soil_moisture", soil);
 
       char *json_string = cJSON_Print(root);
       if (json_string) {
-        ESP_LOGI(TAG, "Publishing to %s: %s", TOPIC, json_string);
+        ESP_LOGI(TAG, "Publishing: %s", json_string);
         esp_mqtt_client_publish(s_client, TOPIC, json_string, 0, 1, 0);
         free(json_string);
       }
       cJSON_Delete(root);
     }
 
-    vTaskDelay(pdMS_TO_TICKS(MQTT_PUBLISH_INTERVAL_MS));
+    vTaskDelayUntil(&x_last_wake_time, pdMS_TO_TICKS(MQTT_PUBLISH_INTERVAL_MS));
   }
 }
 
-esp_err_t mqtt_manager_start(QueueHandle_t queue) {
-  s_sensor_data_queue = queue;
+esp_err_t mqtt_manager_start(QueueSetHandle_t temp_queue,
+                             QueueSetHandle_t lux_queue,
+                             QueueSetHandle_t soil_queue) {
+  s_temp_queue = temp_queue;
+  s_lux_queue = lux_queue;
+  s_soil_queue = soil_queue;
 
   esp_mqtt_client_config_t mqtt_conf = {
       .broker.address.uri = MQTT_BROKER,

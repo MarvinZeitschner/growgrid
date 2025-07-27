@@ -6,6 +6,6 @@ idf_component_register(
   REQUIRES
   app_config
   mqtt
-  sensor_aggregator
   secrets
-  json)
+  json
+  board)

@@ -2,14 +2,20 @@
 #include "app_config.h"
 #include "board.h"
 #include "esp_log.h"
-// #include "esp_task_wdt.h"
-#include "sensor_aggregator.h"
+#include "freertos/idf_additions.h"
 #include "soil_sensor.h"
+#include <stdlib.h>
 
 static const char *TAG = "SOIL_SERVICE";
 
+typedef struct {
+  QueueHandle_t data_queue;
+} task_params_t;
+
 static void read_soil_moisture_task(void *pvParameter) {
-  QueueHandle_t data_queue = (QueueHandle_t)pvParameter;
+  task_params_t *p = (task_params_t *)pvParameter;
+  QueueHandle_t data_queue = p->data_queue;
+  free(p);
 
   adc_oneshot_unit_init_cfg_t init_config = {.unit_id = ADC_UNIT_1};
   adc_oneshot_chan_cfg_t ch_config = {.bitwidth = ADC_BITWIDTH_DEFAULT,
@@ -20,22 +26,31 @@ static void read_soil_moisture_task(void *pvParameter) {
   soil_sensor_handle_t soil_handle = soil_sensor_create(s_conf);
   soil_sensor_set_calibration(soil_handle, SOIL_OUT_MAX, SOIL_OUT_MIN);
 
-  // ESP_ERROR_CHECK(esp_task_wdt_add(NULL));
-  sensor_data_t data = {.type = DATA_TYPE_SOIL_MOISTURE};
+  int data = 0;
+
+  TickType_t x_last_wake_time = xTaskGetTickCount();
 
   while (1) {
-    if (soil_sensor_read_percent(soil_handle, &data.i_value) == ESP_OK) {
-      xQueueSend(data_queue, &data, portMAX_DELAY);
+    if (soil_sensor_read_percent(soil_handle, &data) == ESP_OK) {
+      xQueueOverwrite(data_queue, &data);
     }
-    // esp_task_wdt_reset();
-    vTaskDelay(pdMS_TO_TICKS(SENSOR_POLLING_INTERVAL_MS));
+
+    vTaskDelayUntil(&x_last_wake_time,
+                    pdMS_TO_TICKS(SENSOR_POLLING_INTERVAL_MS));
   }
 }
 
 esp_err_t soil_sensor_service_start(QueueHandle_t data_queue) {
+  task_params_t *params = (task_params_t *)malloc(sizeof(task_params_t));
+  if (params == NULL) {
+    ESP_LOGE(TAG, "Failed to allocate memory for task parameters");
+    return ESP_ERR_NO_MEM;
+  }
+  params->data_queue = data_queue;
+
   xTaskCreate(&read_soil_moisture_task, "read_soil_moisture",
-              TASK_STACK_SENSOR_SERVICE, (void *)data_queue,
-              TASK_PRIO_SENSOR_SERVICE, NULL);
+              TASK_STACK_SENSOR_SERVICE, params, TASK_PRIO_SENSOR_SERVICE,
+              NULL);
   ESP_LOGI(TAG, "Soil sensor service started.");
   return ESP_OK;
 }

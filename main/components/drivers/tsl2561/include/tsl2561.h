@@ -252,6 +252,16 @@ esp_err_t tsl2561_read_channels(tsl2561_handle_t sensor, uint16_t *ch0,
  */
 esp_err_t tsl2561_read_lux(tsl2561_handle_t sensor, int *lux);
 
+/**
+ * @brief Gets the integration time of the initialized sensor
+ *
+ * @param[in]  sensor   Pointer to initialized TSL2561 device handle
+ *
+ * @return tsl2561_integration_time_t
+ */
+tsl2561_integration_time_t
+tsl2561_get_integration_time(tsl2561_handle_t sensor);
+
 #ifdef __cplusplus
 }
 #endif

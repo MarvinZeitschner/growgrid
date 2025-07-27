@@ -12,4 +12,8 @@
 #define SOIL_OUT_MAX 2200
 #define SOIL_OUT_MIN 900
 
+#define EVENT_GROUP_TEMP_BIT (1 << 0)
+#define EVENT_GROUP_LUX_BIT (1 << 1)
+#define EVENT_GROUP_SOIL_BIT (1 << 2)
+
 #endif

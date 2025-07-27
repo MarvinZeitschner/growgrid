@@ -11,7 +11,9 @@
  * @param queue The handle to the queue from which sensor data will be received.
  * @return ESP_OK on success, ESP_FAIL on failure.
  */
-esp_err_t mqtt_manager_start(QueueHandle_t queue);
+esp_err_t mqtt_manager_start(QueueSetHandle_t temp_queue,
+                             QueueSetHandle_t lux_queue,
+                             QueueSetHandle_t soil_queue);
 
 /**
  * @brief Checks if the MQTT client is currently connected.

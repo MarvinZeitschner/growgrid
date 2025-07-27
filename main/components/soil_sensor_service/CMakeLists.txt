@@ -6,5 +6,4 @@ idf_component_register(
   REQUIRES
   app_config
   soil_sensor
-  sensor_aggregator
   board)

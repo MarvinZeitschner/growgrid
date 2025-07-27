@@ -6,5 +6,4 @@ idf_component_register(
   REQUIRES
   app_config
   tsl2561
-  sensor_aggregator
   bus_manager)

@@ -2,9 +2,7 @@
 #include "app_config.h"
 #include "bmp280.h"
 #include "esp_log.h"
-// #include "esp_task_wdt.h"
-#include "freertos/task.h"
-#include "sensor_aggregator.h"
+#include "freertos/queue.h"
 
 static const char *TAG = "BMP280_SERVICE";
 
@@ -27,18 +25,19 @@ static void read_temperature_task(void *pvParameter) {
   }
   ESP_ERROR_CHECK(bmp280_default_init(bmp280_handle));
 
+  float data = 0.f;
+
   vTaskDelay(pdMS_TO_TICKS(100));
 
-  // ESP_ERROR_CHECK(esp_task_wdt_add(NULL));
-  sensor_data_t data = {.type = DATA_TYPE_TEMPERATURE};
+  TickType_t x_last_wake_time = xTaskGetTickCount();
 
   while (1) {
-    bmp280_take_forced_measurement(bmp280_handle);
-    if (bmp280_read_temperature(bmp280_handle, &data.f_value) == ESP_OK) {
-      xQueueSend(data_queue, &data, portMAX_DELAY);
+    if (bmp280_read_temperature(bmp280_handle, &data) == ESP_OK) {
+      xQueueOverwrite(data_queue, &data);
     }
-    // esp_task_wdt_reset();
-    vTaskDelay(pdMS_TO_TICKS(SENSOR_POLLING_INTERVAL_MS));
+
+    vTaskDelayUntil(&x_last_wake_time,
+                    pdMS_TO_TICKS(SENSOR_POLLING_INTERVAL_MS));
   }
 }
 

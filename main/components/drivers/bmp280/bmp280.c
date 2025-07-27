@@ -193,7 +193,7 @@ esp_err_t bmp280_default_init(bmp280_handle_t sensor) {
       ESP_OK) { // read trimming parameters, see DS 4.2.2
     return ESP_FAIL;
   }
-  if (bmp280_set_sampling(sensor, BMP280_MODE_FORCED, BMP280_SAMPLING_X8,
+  if (bmp280_set_sampling(sensor, BMP280_MODE_NORMAL, BMP280_SAMPLING_X8,
                           BMP280_SAMPLING_X8, BMP280_FILTER_OFF,
                           BMP280_STANDBY_MS_1000) != ESP_OK) { // use defaults
     return ESP_FAIL;

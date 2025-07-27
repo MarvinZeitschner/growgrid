@@ -1,11 +1,11 @@
 #include "tsl2561_service.h"
 #include "app_config.h"
 #include "esp_log.h"
-// #include "esp_task_wdt.h"
 #include "freertos/idf_additions.h"
 #include "freertos/projdefs.h"
-#include "sensor_aggregator.h"
+#include "portmacro.h"
 #include "tsl2561.h"
+#include <stdint.h>
 
 static const char *TAG = "TSL2561_SERVICE";
 
@@ -27,21 +27,18 @@ static void read_light_task(void *pvParameter) {
   }
   ESP_ERROR_CHECK(tsl2561_default_init(tsl_handle));
 
-  // ESP_ERROR_CHECK(esp_task_wdt_add(NULL));
-  sensor_data_t data = {.type = DATA_TYPE_LUX};
+  int data = 0;
+
+  TickType_t x_last_wake_time = xTaskGetTickCount();
 
   while (1) {
-    tsl2561_power_on(tsl_handle);
 
-    vTaskDelay(pdMS_TO_TICKS(101));
-
-    if (tsl2561_read_lux(tsl_handle, &data.i_value) == ESP_OK) {
-      xQueueSend(data_queue, &data, portMAX_DELAY);
+    if (tsl2561_read_lux(tsl_handle, &data) == ESP_OK) {
+      xQueueOverwrite(data_queue, &data);
     }
 
-    tsl2561_power_off(tsl_handle);
-    // esp_task_wdt_reset();
-    vTaskDelay(pdMS_TO_TICKS(SENSOR_POLLING_INTERVAL_MS - 101));
+    vTaskDelayUntil(&x_last_wake_time,
+                    pdMS_TO_TICKS(SENSOR_POLLING_INTERVAL_MS));
   }
 }
 
