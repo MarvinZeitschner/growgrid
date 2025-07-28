@@ -3,11 +3,11 @@ idf_component_register(
   "app_main.c"
   REQUIRES
   app_config
+  sensor_data
   wifi_manager
   mqtt_manager
   bus_manager
-  bmp280_service
-  tsl2561_service
+  fast_sensor_service
   soil_sensor_service
   rgb_led
   nvs_flash)

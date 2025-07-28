@@ -1,15 +1,15 @@
 #include "app_config.h"
-#include "bmp280_service.h"
 #include "bus_manager.h"
 #include "esp_log.h"
+#include "fast_sensor_service.h"
 #include "freertos/FreeRTOS.h" // IWYU pragma: keep - required before other FreeRTOS headers
 #include "freertos/idf_additions.h"
 #include "freertos/task.h"
 #include "mqtt_manager.h"
 #include "nvs_flash.h"
 #include "rgb_led.h"
+#include "sensor_data.h"
 #include "soil_sensor_service.h"
-#include "tsl2561_service.h"
 #include "wifi_manager.h"
 
 static const char *TAG = "APP_MAIN";
@@ -37,22 +37,9 @@ void app_main(void) {
   ESP_ERROR_CHECK(bus_manager_init_i2c());
   i2c_bus_handle_t i2c_handle = bus_manager_get_i2c_handle();
 
-  QueueHandle_t temp_data_queue =
-      xQueueCreate(SENSOR_QUEUE_SIZE, sizeof(float));
-  if (temp_data_queue == NULL) {
-    ESP_LOGE(TAG, "Failed to create temp data queue.");
-    while (1) {
-    }
-  }
-  QueueHandle_t lux_data_queue = xQueueCreate(SENSOR_QUEUE_SIZE, sizeof(int));
-  if (lux_data_queue == NULL) {
-    ESP_LOGE(TAG, "Failed to create lux data queue.");
-    while (1) {
-    }
-  }
-  QueueHandle_t soil_data_queue = xQueueCreate(SENSOR_QUEUE_SIZE, sizeof(int));
-  if (soil_data_queue == NULL) {
-    ESP_LOGE(TAG, "Failed to create soil data queue.");
+  QueueHandle_t data_queue = xQueueCreate(SENSOR_QUEUE_SIZE, sizeof(float));
+  if (data_queue == NULL) {
+    ESP_LOGE(TAG, "Failed to create data queue.");
     while (1) {
     }
   }
@@ -64,17 +51,20 @@ void app_main(void) {
     }
   }
 
+  SemaphoreHandle_t data_mutex = xSemaphoreCreateMutex();
+  static SensorData_t shared_sensor_data;
+  sensor_data_init(&shared_sensor_data);
+
   ESP_LOGI(TAG, "Starting sensor services...");
-  ESP_ERROR_CHECK(
-      bmp280_service_start(i2c_handle, temp_data_queue, sensor_event_group));
-  ESP_ERROR_CHECK(
-      tsl2561_service_start(i2c_handle, lux_data_queue, sensor_event_group));
-  ESP_ERROR_CHECK(
-      soil_sensor_service_start(soil_data_queue, sensor_event_group));
+  ESP_ERROR_CHECK(fast_sensor_service_start(i2c_handle, data_queue,
+                                            sensor_event_group, data_mutex,
+                                            &shared_sensor_data));
+  ESP_ERROR_CHECK(soil_sensor_service_start(data_queue, sensor_event_group,
+                                            data_mutex, &shared_sensor_data));
 
   ESP_LOGI(TAG, "Initializing MQTT manager...");
-  ESP_ERROR_CHECK(mqtt_manager_start(temp_data_queue, lux_data_queue,
-                                     soil_data_queue, sensor_event_group));
+  ESP_ERROR_CHECK(mqtt_manager_start(data_queue, sensor_event_group, data_mutex,
+                                     &shared_sensor_data));
 
   ESP_LOGI(TAG, "Application startup complete. System is running.");
 }

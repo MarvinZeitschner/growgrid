@@ -5,5 +5,6 @@ idf_component_register(
   "include"
   REQUIRES
   app_config
+  sensor_data
   soil_sensor
   board)

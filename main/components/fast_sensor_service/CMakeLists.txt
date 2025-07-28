@@ -1,9 +1,12 @@
 idf_component_register(
   SRCS
-  "tsl2561_service.c"
+  "fast_sensor_service.c"
   INCLUDE_DIRS
   "include"
   REQUIRES
+  board
   app_config
+  bmp280
   tsl2561
-  bus_manager)
+  bus_manager
+  sensor_data)
