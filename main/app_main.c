@@ -7,7 +7,6 @@
 #include "freertos/task.h"
 #include "mqtt_manager.h"
 #include "nvs_flash.h"
-#include "rgb_led.h"
 #include "sensor_data.h"
 #include "soil_sensor_service.h"
 #include "wifi_manager.h"
@@ -24,10 +23,6 @@ void app_main(void) {
     ret = nvs_flash_init();
   }
   ESP_ERROR_CHECK(ret);
-
-  // Indicate startup
-  ESP_ERROR_CHECK(rgb_led_default_init());
-  ESP_ERROR_CHECK(rgb_led_set_color(0, 0, 255));
 
   ESP_LOGI(TAG, "Initializing WiFi...");
   ESP_ERROR_CHECK(wifi_manager_init_sta());

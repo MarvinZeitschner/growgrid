@@ -9,5 +9,4 @@ idf_component_register(
   bus_manager
   fast_sensor_service
   soil_sensor_service
-  rgb_led
   nvs_flash)

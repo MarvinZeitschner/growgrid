@@ -1,9 +1,21 @@
+# ESP
 .cache
 build
 .clangd
 managed_components
-
-docker/mosquitto/passwd
-
 secrets.h
-.env
+
+
+.env*
+
+# Node-RED
+docker/nodered/.npm/
+docker/nodered/lib/
+docker/nodered/node_modules/
+docker/nodered/.config.*
+docker/nodered/flows_cred.json
+docker/nodered/.flows_cred.json.backup
+docker/nodered/.flows.json.backup
+
+# Mosquitto
+docker/mosquitto/passwd
