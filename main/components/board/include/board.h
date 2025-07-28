@@ -9,14 +9,5 @@
 #define I2C_FREQ_HZ 100000
 
 #define SOIL_ADC_CHANNEL ADC_CHANNEL_0
-#define SOIL_OUT_MAX 2200
-#define SOIL_OUT_MIN 900
-
-#define EVENT_SENSOR_TEMP_BIT (1 << 0)
-#define EVENT_SENSOR_LUX_BIT (1 << 1)
-#define EVENT_SENSOR_SOIL_BIT (1 << 2)
-#define EVENT_SENSOR_ALL_BITS                                                  \
-  (EVENT_SENSOR_TEMP_BIT | EVENT_SENSOR_LUX_BIT | EVENT_SENSOR_SOIL_BIT)
-#define EVENT_SENSOR_WAIT_TIMEOUT_MS (5000 * 10)
 
 #endif

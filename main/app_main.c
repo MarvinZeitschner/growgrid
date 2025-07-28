@@ -76,11 +76,5 @@ void app_main(void) {
   ESP_ERROR_CHECK(mqtt_manager_start(temp_data_queue, lux_data_queue,
                                      soil_data_queue, sensor_event_group));
 
-  // Indicate successful startup
-  vTaskDelay(pdMS_TO_TICKS(1000));
-  ESP_ERROR_CHECK(rgb_led_set_color(0, 255, 0)); // Green for running
-  vTaskDelay(pdMS_TO_TICKS(2000));
-  ESP_ERROR_CHECK(rgb_led_clear());
-
   ESP_LOGI(TAG, "Application startup complete. System is running.");
 }

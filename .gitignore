@@ -6,3 +6,4 @@ managed_components
 docker/mosquitto/passwd
 
 secrets.h
+.env
