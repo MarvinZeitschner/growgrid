@@ -75,6 +75,16 @@ static void power_manager_task(void *pvParameter) {
       publish_int_reading("soil_moisture",
                           local_sensor_data_copy.soil_moisture);
     }
+
+    ESP_LOGI(TAG, "Waiting for all messages to be published...");
+    esp_err_t pub_ack_result = mqtt_manager_wait_for_all_publishes(5000);
+    if (pub_ack_result == ESP_OK) {
+      ESP_LOGI(TAG, "All messages acknowledged.");
+    } else {
+      ESP_LOGE(
+          TAG,
+          "Failed to receive all publish acknowledgements within the timeout.");
+    }
   }
 
   ESP_LOGI(TAG, "Disconnecting MQTT client...");

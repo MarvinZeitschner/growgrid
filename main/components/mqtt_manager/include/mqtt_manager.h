@@ -27,6 +27,15 @@ esp_err_t mqtt_manager_disconnect(void);
 esp_err_t mqtt_manager_publish(const char *topic, const char *data);
 
 /**
+ * @brief Waits for all QoS 1/2 messages to be acknowledged.
+ *
+ * @param timeout_ms The maximum time to wait in milliseconds.
+ * @return ESP_OK on success, ESP_ERR_TIMEOUT on timeout.
+ */
+esp_err_t mqtt_manager_wait_for_all_publishes(uint32_t timeout_ms);
+
+
+/**
  * @brief Checks if the MQTT client is currently connected.
  *
  * @return true if connected, false otherwise.
