@@ -51,34 +51,37 @@ services:
       - MQTT_TOPIC=${MQTT_TOPIC}
     volumes:
       - ./nodered:/data
-    # depends_on:
-      # influxdb2:
-      #   condition: service_started
+    depends_on:
+      influxdb2:
+        condition: service_started
+      mosquitto:
+        condition: service_started
     restart: unless-stopped
 
-  # grafana:
-  #   image: grafana/grafana:latest
-  #   container_name: grafana
-  #   ports:
-  #     - "3000:3000"
-  #   volumes:
-  #     - grafana-data:/var/lib/grafana
-  #     - ./grafana/provisioning:/etc/grafana/provisioning
-  #     - ./grafana/dashboards:/var/lib/grafana/dashboards
-  #   environment:
-  #     - GF_SECURITY_ADMIN_USER=${GRAFANA_USERNAME}
-  #     - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
-  #     - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
-  #     - INFLUXDB_ORG=${INFLUXDB_ORG}
-  #     - INFLUXDB_BUCKET=${INFLUXDB_BUCKET}
-  #   depends_on:
-  #     influxdb2:
-  #       condition: service_started
-  #   restart: unless-stopped
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USERNAME}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
+      - INFLUXDB_ORG=${INFLUXDB_ORG}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET}
+      - INFLUXDB_URL=${INFLUXDB_URL}
+    depends_on:
+      influxdb2:
+        condition: service_started
+    restart: unless-stopped
 
 volumes:
   influxdb2-data:
   nodered-data:
   mosquitto-data-dev:
   mosquitto-logs-dev:
-  # grafana-data:
+  grafana-data:
