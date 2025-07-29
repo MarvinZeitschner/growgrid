@@ -97,6 +97,14 @@ static void power_manager_task(void *pvParameter) {
 
   ESP_LOGI(TAG, "Disconnecting WiFi...");
   wifi_manager_disconnect();
+  esp_err_t wifi_dis_result = wifi_manager_wait_for_disconnect(5000);
+  if (wifi_dis_result == ESP_OK) {
+    ESP_LOGI(TAG, "WiFi disconnected.");
+  } else {
+    ESP_LOGE(TAG,
+             "Failed to receive wifi disconnect event within the timeout.");
+  }
+  wifi_manager_stop();
 
   ESP_LOGI(TAG, "Going into deep sleep");
   esp_sleep_enable_timer_wakeup(SLEEP_TIME_SEC * 1000000ULL);
@@ -113,8 +121,8 @@ esp_err_t power_manager_start(QueueHandle_t data_queue,
   params.data_mutex = data_mutex;
   params.shared_sensor_data = shared_data;
 
-  xTaskCreate(&power_manager_task, "power_manager", TASK_STACK_MQTT_PUBLISHER,
-              &params, TASK_PRIO_MQTT_PUBLISHER, NULL);
+  xTaskCreate(&power_manager_task, "power_manager", TASK_STACK_POWER_PUBLISHER,
+              &params, TASK_PRIO_POWER_MANGER, NULL);
 
   return ESP_OK;
 }
