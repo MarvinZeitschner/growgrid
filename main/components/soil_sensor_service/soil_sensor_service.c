@@ -78,3 +78,5 @@ esp_err_t soil_sensor_service_start(QueueHandle_t data_queue,
   }
   return ESP_OK;
 }
+
+uint8_t soil_sensor_get_wake_count() { return wake_count; }

@@ -1,6 +1,5 @@
 #include "mqtt_manager.h"
 #include "app_config.h"
-#include "cJSON.h"
 #include "esp_log.h"
 #include "esp_sleep.h"
 #include "freertos/idf_additions.h"
@@ -8,7 +7,8 @@
 #include "mqtt_client.h"
 #include "secrets.h"
 #include "sensor_data.h"
-#include <stdlib.h>
+#include "soil_sensor_service.h"
+#include <stdint.h>
 #include <string.h>
 
 static const char *TAG = "MQTT_MANAGER";
@@ -69,20 +69,48 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
   }
 }
 
+static void publish_float_reading(esp_mqtt_client_handle_t client,
+                                  const char *sensor_name, float value) {
+  char topic[64];
+  snprintf(topic, sizeof(topic), "%s/%s", TOPIC, sensor_name);
+
+  char payload[16];
+  snprintf(payload, sizeof(payload), "%.2f", value);
+
+  ESP_LOGI(TAG, "Publishing to %s: %s", topic, payload);
+  esp_mqtt_client_publish(client, topic, payload, 0, 1, 0);
+}
+
+static void publish_int_reading(esp_mqtt_client_handle_t client,
+                                const char *sensor_name, int value) {
+  char topic[64];
+  snprintf(topic, sizeof(topic), "%s/%s", TOPIC, sensor_name);
+
+  char payload[16];
+  snprintf(payload, sizeof(payload), "%d", value);
+
+  ESP_LOGI(TAG, "Publishing to %s: %s", topic, payload);
+  esp_mqtt_client_publish(client, topic, payload, 0, 1, 0);
+}
+
 static void mqtt_publisher_task(void *pvParameter) {
   ESP_LOGI(TAG, "MQTT Publisher task started.");
   task_params_t config = *(task_params_t *)pvParameter;
 
-  while (!mqtt_manager_is_connected()) {
-    vTaskDelay(pdMS_TO_TICKS(10));
-  }
-
   SensorData_t local_sensor_data_copy;
   sensor_data_init(&local_sensor_data_copy);
 
+  uint8_t soil_sensor_wake_count = soil_sensor_get_wake_count();
+  EventBits_t bits_to_wait_for;
+  if (soil_sensor_wake_count % 3 == 0) {
+    bits_to_wait_for = EVENT_SENSOR_ALL_BITS;
+  } else {
+    bits_to_wait_for = EVENT_SENSOR_FAST_BITS;
+  }
+
   EventBits_t bits =
-      xEventGroupWaitBits(config.event_group, EVENT_SENSOR_ALL_BITS, pdTRUE,
-                          pdTRUE, pdMS_TO_TICKS(EVENT_SENSOR_WAIT_TIMEOUT_MS));
+      xEventGroupWaitBits(config.event_group, bits_to_wait_for, pdTRUE, pdTRUE,
+                          pdMS_TO_TICKS(EVENT_SENSOR_WAIT_TIMEOUT_MS));
 
   if (xSemaphoreTake(config.data_mutex,
                      pdMS_TO_TICKS(SHARED_DATA_SEMAPHORE_TIMEOUT_MS))) {
@@ -91,26 +119,21 @@ static void mqtt_publisher_task(void *pvParameter) {
   }
 
   if (s_mqtt_connected) {
-    cJSON *root = cJSON_CreateObject();
-    if (bits & EVENT_SENSOR_TEMP_BIT)
-      cJSON_AddNumberToObject(root, "temperature",
-                              config.shared_sensor_data->temperature);
-    if (bits & EVENT_SENSOR_LUX_BIT)
-      cJSON_AddNumberToObject(root, "light", config.shared_sensor_data->light);
-    if (bits & EVENT_SENSOR_SOIL_BIT)
-      cJSON_AddNumberToObject(root, "soil_moisture",
-                              config.shared_sensor_data->soil_moisture);
-
-    char *json_string = cJSON_Print(root);
-    if (json_string) {
-      ESP_LOGI(TAG, "Publishing: %s", json_string);
-      esp_mqtt_client_publish(config.client, TOPIC, json_string, 0, 1, 0);
-      free(json_string);
+    if (bits & EVENT_SENSOR_TEMP_BIT) {
+      publish_float_reading(config.client, "temperature",
+                            local_sensor_data_copy.temperature);
     }
-    cJSON_Delete(root);
+    if (bits & EVENT_SENSOR_LUX_BIT) {
+      publish_int_reading(config.client, "light", local_sensor_data_copy.light);
+    }
+    if (bits & EVENT_SENSOR_SOIL_BIT) {
+      publish_int_reading(config.client, "soil_moisture",
+                          local_sensor_data_copy.soil_moisture);
+    }
   }
 
   vTaskDelay(pdMS_TO_TICKS(2000));
+  esp_mqtt_client_disconnect(config.client);
 
   ESP_LOGI(TAG, "Going into deep sleep");
   esp_sleep_enable_timer_wakeup(SLEEP_TIME_SEC * 1000000ULL);
