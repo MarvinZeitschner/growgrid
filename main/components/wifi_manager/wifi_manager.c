@@ -36,6 +36,12 @@ static void event_handler(void *arg, esp_event_base_t event_base,
   }
 }
 
+esp_err_t wifi_manager_disconnect(void) {
+  ESP_LOGI(TAG, "Disconnecting WiFi...");
+  esp_wifi_disconnect();
+  return esp_wifi_stop();
+}
+
 esp_err_t wifi_manager_init_sta(void) {
   s_wifi_event_group = xEventGroupCreate();
 

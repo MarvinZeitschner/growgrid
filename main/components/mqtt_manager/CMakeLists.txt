@@ -7,7 +7,6 @@ idf_component_register(
   board
   app_config
   sensor_data
-  soil_sensor_service
   mqtt
   secrets
   board)

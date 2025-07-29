@@ -1,12 +1,11 @@
 idf_component_register(
-  SRCS
-  "app_main.c"
+  SRCS "power_manager.c"
+  INCLUDE_DIRS "include"
   REQUIRES
   app_config
   sensor_data
+  mqtt_manager
   wifi_manager
-  power_manager
-  bus_manager
-  fast_sensor_service
+  esp_wifi
   soil_sensor_service
-  nvs_flash)
+)

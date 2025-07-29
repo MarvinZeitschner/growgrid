@@ -12,3 +12,10 @@
  * @return ESP_OK on success, ESP_FAIL on failure.
  */
 esp_err_t wifi_manager_init_sta(void);
+
+/**
+ * @brief Disconnects the WiFi station.
+ *
+ * @return ESP_OK on success, ESP_FAIL on failure.
+ */
+esp_err_t wifi_manager_disconnect(void);

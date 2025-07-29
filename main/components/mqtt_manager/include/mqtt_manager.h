@@ -1,22 +1,30 @@
 #pragma once
 
 #include "esp_err.h"
-#include "freertos/FreeRTOS.h" // IWYU pragma: keep - required before other FreeRTOS headers
-#include "freertos/idf_additions.h"
-#include "freertos/queue.h"
-#include "sensor_data.h"
 #include <stdbool.h>
 
 /**
- * @brief Starts the MQTT client and the publisher task.
+ * @brief Starts the MQTT client.
  *
- * @param queue The handle to the queue from which sensor data will be received.
  * @return ESP_OK on success, ESP_FAIL on failure.
  */
-esp_err_t mqtt_manager_start(QueueSetHandle_t data_queue,
-                             EventGroupHandle_t event_group,
-                             SemaphoreHandle_t data_mutex,
-                             SensorData_t *shared_data);
+esp_err_t mqtt_manager_start(void);
+
+/**
+ * @brief Disconnects the MQTT client.
+ *
+ * @return ESP_OK on success, ESP_FAIL on failure.
+ */
+esp_err_t mqtt_manager_disconnect(void);
+
+/**
+ * @brief Publishes a message to a given topic.
+ *
+ * @param topic The topic to publish to.
+ * @param data The data to publish.
+ * @return ESP_OK on success, ESP_FAIL on failure.
+ */
+esp_err_t mqtt_manager_publish(const char *topic, const char *data);
 
 /**
  * @brief Checks if the MQTT client is currently connected.
