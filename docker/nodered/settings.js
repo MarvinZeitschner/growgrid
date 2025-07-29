@@ -4,6 +4,8 @@ module.exports = {
   serialReconnectTime: 15000,
   debugMaxLength: 1000,
 
+  credentialSecret: process.env.CREDENTIAL_SECRET || '',
+
   functionGlobalContext: {
     influxdb_host: process.env.INFLUXDB_HOST || 'influxdb2',
     influxdb_token: process.env.INFLUXDB_TOKEN,
@@ -15,7 +17,9 @@ module.exports = {
     mqtt_password: process.env.MQTT_PASSWORD || ''
   },
 
-  autoInstallModules: true,
+  externalModules: {
+    autoInstall: true,
+  },
 
   logging: {
     console: {
