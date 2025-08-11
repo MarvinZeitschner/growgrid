@@ -7,7 +7,6 @@
 #include "freertos/task.h"
 #include "mqtt_manager.h"
 #include "nvs_flash.h"
-#include "power_manager.h"
 #include "sensor_data.h"
 #include "soil_sensor_service.h"
 #include "wifi_manager.h"
@@ -61,10 +60,8 @@ void app_main(void) {
 
   ESP_LOGI(TAG, "Initializing MQTT manager...");
   ESP_ERROR_CHECK(mqtt_manager_start());
-
-  ESP_LOGI(TAG, "Starting power manager...");
-  ESP_ERROR_CHECK(power_manager_start(data_queue, sensor_event_group,
-                                      data_mutex, &shared_sensor_data));
+  ESP_ERROR_CHECK(mqtt_manager_start_publisher(
+      data_queue, sensor_event_group, data_mutex, &shared_sensor_data));
 
   ESP_LOGI(TAG, "Application startup complete. System is running.");
 }

@@ -46,35 +46,35 @@ static void fast_sensor_task(void *pvParameter) {
   // Wait for sensors to stabilize
   vTaskDelay(pdMS_TO_TICKS(100));
 
-  float temp = -999.f;
-  int lux = -1;
+  while (1) {
+    float temp = -999.f;
+    int lux = -1;
 
-  esp_err_t temp_res = bmp280_read_temperature(bmp280_handle, &temp);
-  esp_err_t lux_res = tsl2561_read_lux(tsl2561_handle, &lux);
+    esp_err_t temp_res = bmp280_read_temperature(bmp280_handle, &temp);
+    esp_err_t lux_res = tsl2561_read_lux(tsl2561_handle, &lux);
 
-  if (temp_res == ESP_OK || lux_res == ESP_OK) {
-    if (xSemaphoreTake(config.data_mutex,
-                       pdMS_TO_TICKS(SHARED_DATA_SEMAPHORE_TIMEOUT_MS)) ==
-        pdTRUE) {
-      if (temp_res == ESP_OK) {
-        config.shared_sensor_data->temperature = temp;
-        xEventGroupSetBits(config.event_group, EVENT_SENSOR_TEMP_BIT);
+    if (temp_res == ESP_OK || lux_res == ESP_OK) {
+      if (xSemaphoreTake(config.data_mutex,
+                         pdMS_TO_TICKS(SHARED_DATA_SEMAPHORE_TIMEOUT_MS)) ==
+          pdTRUE) {
+        if (temp_res == ESP_OK) {
+          config.shared_sensor_data->temperature = temp;
+          xEventGroupSetBits(config.event_group, EVENT_SENSOR_TEMP_BIT);
+        }
+
+        if (lux_res == ESP_OK) {
+          config.shared_sensor_data->light = lux;
+          xEventGroupSetBits(config.event_group, EVENT_SENSOR_LUX_BIT);
+        }
+
+        xSemaphoreGive(config.data_mutex);
+      } else {
+        ESP_LOGE(TAG, "Failed to acquire mutex");
       }
-
-      if (lux_res == ESP_OK) {
-        config.shared_sensor_data->light = lux;
-        xEventGroupSetBits(config.event_group, EVENT_SENSOR_LUX_BIT);
-      }
-
-      xSemaphoreGive(config.data_mutex);
-    } else {
-      ESP_LOGE(TAG, "Failed to acquire mutex");
     }
-  }
 
-  bmp280_delete(&bmp280_handle);
-  tsl2561_delete(&tsl2561_handle);
-  vTaskDelete(NULL);
+    vTaskDelay(pdMS_TO_TICKS(SENSOR_READ_INTERVAL_MS));
+  }
 }
 
 esp_err_t fast_sensor_service_start(i2c_bus_handle_t i2c_handle,

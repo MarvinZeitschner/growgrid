@@ -5,7 +5,7 @@ idf_component_register(
   app_config
   sensor_data
   wifi_manager
-  power_manager
+  mqtt_manager
   bus_manager
   fast_sensor_service
   soil_sensor_service

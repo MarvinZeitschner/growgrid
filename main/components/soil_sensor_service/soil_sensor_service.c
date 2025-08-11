@@ -1,6 +1,5 @@
 #include "soil_sensor_service.h"
 #include "app_config.h"
-#include "esp_attr.h"
 #include "esp_log.h"
 #include "freertos/idf_additions.h"
 #include "soil_sensor.h"
@@ -8,9 +7,6 @@
 #include <stdlib.h>
 
 static const char *TAG = "SOIL_SERVICE";
-
-// Run the first time
-RTC_DATA_ATTR static uint8_t wake_count = 2;
 
 typedef struct {
   EventGroupHandle_t event_group;
@@ -36,47 +32,40 @@ static void read_soil_moisture_task(void *pvParameter) {
   }
   soil_sensor_set_calibration(soil_handle, SOIL_OUT_MAX, SOIL_OUT_MIN);
 
-  int soil = -1;
+  while (1) {
+    int soil = -1;
 
-  esp_err_t soil_res = soil_sensor_read_percent(soil_handle, &soil);
+    esp_err_t soil_res = soil_sensor_read_percent(soil_handle, &soil);
 
-  if (soil_res == ESP_OK) {
-    if (xSemaphoreTake(config.data_mutex,
-                       pdMS_TO_TICKS(SHARED_DATA_SEMAPHORE_TIMEOUT_MS)) ==
-        pdTRUE) {
-      config.shared_sensor_data->soil_moisture = soil;
-      xEventGroupSetBits(config.event_group, EVENT_SENSOR_SOIL_BIT);
+    if (soil_res == ESP_OK) {
+      if (xSemaphoreTake(config.data_mutex,
+                         pdMS_TO_TICKS(SHARED_DATA_SEMAPHORE_TIMEOUT_MS)) ==
+          pdTRUE) {
+        config.shared_sensor_data->soil_moisture = soil;
+        xEventGroupSetBits(config.event_group, EVENT_SENSOR_SOIL_BIT);
 
-      xSemaphoreGive(config.data_mutex);
-    } else {
-      ESP_LOGE(TAG, "Failed to acquire mutex");
+        xSemaphoreGive(config.data_mutex);
+      } else {
+        ESP_LOGE(TAG, "Failed to acquire mutex");
+      }
     }
+    vTaskDelay(pdMS_TO_TICKS(SENSOR_READ_INTERVAL_MS));
   }
-
-  soil_sensor_delete(&soil_handle);
-  vTaskDelete(NULL);
 }
 
 esp_err_t soil_sensor_service_start(QueueHandle_t data_queue,
                                     EventGroupHandle_t event_group,
                                     SemaphoreHandle_t data_mutex,
                                     SensorData_t *shared_sensor_data) {
-  wake_count++;
+  static task_params_t params;
+  params.event_group = event_group;
+  params.data_queue = data_queue;
+  params.data_mutex = data_mutex;
+  params.shared_sensor_data = shared_sensor_data;
 
-  if (wake_count % 3 == 0) {
-    static task_params_t params;
-    params.event_group = event_group;
-    params.data_queue = data_queue;
-    params.data_mutex = data_mutex;
-    params.shared_sensor_data = shared_sensor_data;
-
-    xTaskCreate(&read_soil_moisture_task, "read_soil_moisture",
-                TASK_STACK_SENSOR_SERVICE, &params, TASK_PRIO_SENSOR_SERVICE,
-                NULL);
-    ESP_LOGI(TAG, "Soil sensor service started.");
-    wake_count = 0;
-  }
+  xTaskCreate(&read_soil_moisture_task, "read_soil_moisture",
+              TASK_STACK_SENSOR_SERVICE, &params, TASK_PRIO_SENSOR_SERVICE,
+              NULL);
+  ESP_LOGI(TAG, "Soil sensor service started.");
   return ESP_OK;
 }
-
-uint8_t soil_sensor_get_wake_count() { return wake_count; }
