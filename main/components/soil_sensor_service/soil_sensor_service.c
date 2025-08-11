@@ -23,7 +23,8 @@ static void read_soil_moisture_task(void *pvParameter) {
                                       .atten = ADC_ATTEN_DB_12};
   soil_sensor_config_t s_conf = {.adc_pin = GPIO_NUM_0,
                                  .init_config = init_config,
-                                 .channel_config = ch_config};
+                                 .channel_config = ch_config,
+                                 .sampling = SOIL_SAMPLING_X16};
   soil_sensor_handle_t soil_handle = soil_sensor_create(s_conf);
   if (soil_handle == NULL) {
     soil_sensor_delete(&soil_handle);

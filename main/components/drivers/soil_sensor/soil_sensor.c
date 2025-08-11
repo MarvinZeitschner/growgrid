@@ -13,7 +13,6 @@ soil_sensor_handle_t soil_sensor_create(soil_sensor_config_t const config) {
 
   sens->config = config;
   sens->min = 0;
-  // TODO: derive standard from config
   sens->max = 4095;
 
   adc_oneshot_unit_init_cfg_t init_config1 = {
@@ -38,7 +37,37 @@ soil_sensor_handle_t soil_sensor_create(soil_sensor_config_t const config) {
 
 esp_err_t soil_sensor_read_raw(soil_sensor_handle_t sensor, int *raw) {
   soil_sensor_dev_t *sens = (soil_sensor_dev_t *)sensor;
-  return adc_oneshot_read(sens->adc_oneshot_handle, SOIL_ADC_CHANNEL, raw);
+  int sum = 0;
+  int num_samples = 0;
+
+  switch (sens->config.sampling) {
+  case SOIL_SAMPLING_X4:
+    num_samples = 4;
+    break;
+  case SOIL_SAMPLING_X8:
+    num_samples = 8;
+    break;
+  case SOIL_SAMPLING_X16:
+    num_samples = 16;
+    break;
+  default:
+    num_samples = 1;
+    break;
+  }
+
+  for (int i = 0; i < num_samples; i++) {
+    int val;
+    esp_err_t err =
+        adc_oneshot_read(sens->adc_oneshot_handle, SOIL_ADC_CHANNEL, &val);
+    if (err != ESP_OK) {
+      ESP_LOGE(TAG, "Failed to read ADC: %s", esp_err_to_name(err));
+      return err;
+    }
+    sum += val;
+  }
+
+  *raw = sum / num_samples;
+  return ESP_OK;
 }
 
 esp_err_t soil_sensor_read_percent(soil_sensor_handle_t sensor, int *percent) {

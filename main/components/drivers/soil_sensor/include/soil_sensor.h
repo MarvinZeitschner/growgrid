@@ -9,10 +9,17 @@
 extern "C" {
 #endif
 
+typedef enum {
+  SOIL_SAMPLING_X4,
+  SOIL_SAMPLING_X8,
+  SOIL_SAMPLING_X16,
+} soil_sensor_sampling;
+
 typedef struct {
   adc_oneshot_unit_init_cfg_t init_config;
   adc_oneshot_chan_cfg_t channel_config;
   gpio_num_t adc_pin;
+  soil_sensor_sampling sampling;
 } soil_sensor_config_t;
 
 typedef struct {

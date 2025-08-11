@@ -156,8 +156,7 @@ esp_err_t mqtt_manager_start_publisher(QueueHandle_t data_queue,
   params.data_mutex = data_mutex;
   params.shared_sensor_data = shared_data;
 
-  xTaskCreate(&mqtt_publisher_task, "mqtt_publisher",
-              TASK_STACK_POWER_PUBLISHER, &params, TASK_PRIO_POWER_MANGER,
-              NULL);
+  xTaskCreate(&mqtt_publisher_task, "mqtt_publisher", TASK_STACK_MQTT_PUBLISHER,
+              &params, TASK_PRIO_MQTT_MANGER, NULL);
   return ESP_OK;
 }

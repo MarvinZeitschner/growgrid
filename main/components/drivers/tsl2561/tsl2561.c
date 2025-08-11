@@ -66,11 +66,9 @@ esp_err_t tsl2561_power_on(tsl2561_handle_t sensor) {
     return err;
   }
 
-  // After powering on, we need to wait for the first integration cycle to
-  // complete. The duration depends on the configured integration time.
   switch (sens->integration_time) {
   case TSL2561_INTEGRATION_13:
-    vTaskDelay(pdMS_TO_TICKS(14)); // 13.7ms, round up
+    vTaskDelay(pdMS_TO_TICKS(14));
     break;
   case TSL2561_INTEGRATION_101:
     vTaskDelay(pdMS_TO_TICKS(101));
