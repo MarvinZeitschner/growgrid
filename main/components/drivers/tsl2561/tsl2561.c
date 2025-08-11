@@ -62,16 +62,23 @@ esp_err_t tsl2561_power_on(tsl2561_handle_t sensor) {
   uint8_t data = TSL2561_CMD_POWER_ON;
   esp_err_t err = i2c_bus_write_byte(sens->i2c_dev,
                                      TSL2561_CMD | TSL2561_REG_CONTROL, data);
-  if (err != ESP_OK)
+  if (err != ESP_OK) {
     return err;
+  }
 
-  uint8_t com_val = 0;
-  while ((com_val & 0x03) != 0x03) {
-    if (i2c_bus_read_byte(sens->i2c_dev, TSL2561_CMD | TSL2561_REG_CONTROL,
-                          &com_val) != ESP_OK) {
-      return ESP_FAIL;
-    }
-    vTaskDelay(100 / portTICK_RATE_MS);
+  // After powering on, we need to wait for the first integration cycle to
+  // complete. The duration depends on the configured integration time.
+  switch (sens->integration_time) {
+  case TSL2561_INTEGRATION_13:
+    vTaskDelay(pdMS_TO_TICKS(14)); // 13.7ms, round up
+    break;
+  case TSL2561_INTEGRATION_101:
+    vTaskDelay(pdMS_TO_TICKS(101));
+    break;
+  case TSL2561_INTEGRATION_402:
+  default:
+    vTaskDelay(pdMS_TO_TICKS(402));
+    break;
   }
 
   return ESP_OK;

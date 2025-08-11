@@ -2,6 +2,6 @@
 
 #define WIFI_SSID "your_wifi_ssid"
 #define WIFI_PASS "your_wifi_password"
-#define MQTT_BROKER "mqtt://192.168.1.100:1883"
+#define MQTT_BROKER "mqtt://192.168.178.152:1883"
 #define MQTT_USER "your_mqtt_username"
 #define MQTT_PASS "your_mqtt_password"

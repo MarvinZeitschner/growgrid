@@ -33,7 +33,9 @@ services:
     restart: unless-stopped
 
   nodered:
-    image: nodered/node-red:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.nodered
     container_name: nodered  
     ports:
       - "1880:1880"
