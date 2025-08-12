@@ -16,7 +16,6 @@ static const char *TAG = "FAST_SENSOR_SERVICE";
 
 typedef struct {
   EventGroupHandle_t event_group;
-  QueueHandle_t data_queue;
   SemaphoreHandle_t data_mutex;
   SensorData_t *shared_sensor_data;
 } task_params_t;
@@ -79,13 +78,11 @@ static void fast_sensor_task(void *pvParameter) {
   }
 }
 
-esp_err_t fast_sensor_service_start(QueueHandle_t data_queue,
-                                    EventGroupHandle_t event_group,
+esp_err_t fast_sensor_service_start(EventGroupHandle_t event_group,
                                     SemaphoreHandle_t data_mutex,
                                     SensorData_t *shared_sensor_data) {
   static task_params_t params;
 
-  params.data_queue = data_queue;
   params.event_group = event_group;
   params.data_mutex = data_mutex;
   params.shared_sensor_data = shared_sensor_data;
