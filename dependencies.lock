@@ -37,10 +37,25 @@ dependencies:
     source:
       type: idf
     version: 5.4.1
+  maucke/bmp280:
+    component_hash: ccbc6da1d40b0c989dff7198c1ae97f18de33d56ec8f64f962c7c3a6dc9bc71f
+    dependencies:
+    - name: espressif/i2c_bus
+      registry_url: https://components.espressif.com
+      require: public
+      version: '*'
+    - name: idf
+      require: private
+      version: '>=5.0'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.0.1
 direct_dependencies:
 - espressif/i2c_bus
 - espressif/led_strip
 - idf
-manifest_hash: c903331d2537d7f77b730d434d49af6f0fc9b0884c051758927a34db761eee0d
+- maucke/bmp280
+manifest_hash: 904fcadb7bc7d62c6a13733c6d6e623620216fd8e6ea604dfc0e84ba16249cda
 target: esp32c6
 version: 2.0.0

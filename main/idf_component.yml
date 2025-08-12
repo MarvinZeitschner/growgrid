@@ -3,3 +3,4 @@ dependencies:
     version: '>=4.1.0'
   espressif/led_strip: '*'
   espressif/i2c_bus: =*
+  maucke/bmp280: ^1.0.1
