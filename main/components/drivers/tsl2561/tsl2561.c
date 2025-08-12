@@ -68,14 +68,14 @@ esp_err_t tsl2561_power_on(tsl2561_handle_t sensor) {
 
   switch (sens->integration_time) {
   case TSL2561_INTEGRATION_13:
-    vTaskDelay(pdMS_TO_TICKS(14));
+    vTaskDelay(pdMS_TO_TICKS(50));
     break;
   case TSL2561_INTEGRATION_101:
-    vTaskDelay(pdMS_TO_TICKS(101));
+    vTaskDelay(pdMS_TO_TICKS(150));
     break;
   case TSL2561_INTEGRATION_402:
   default:
-    vTaskDelay(pdMS_TO_TICKS(402));
+    vTaskDelay(pdMS_TO_TICKS(500));
     break;
   }
 

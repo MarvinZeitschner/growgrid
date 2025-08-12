@@ -43,8 +43,7 @@ static void fast_sensor_task(void *pvParameter) {
 
   ESP_LOGI(TAG, "Initialized BMP280 + TSL2561");
 
-  // Wait for sensors to stabilize
-  vTaskDelay(pdMS_TO_TICKS(100));
+  TickType_t last_wake_time = xTaskGetTickCount();
 
   while (1) {
     float temp = -999.f;
@@ -73,7 +72,7 @@ static void fast_sensor_task(void *pvParameter) {
       }
     }
 
-    vTaskDelay(pdMS_TO_TICKS(SENSOR_READ_INTERVAL_MS));
+    vTaskDelayUntil(&last_wake_time, pdMS_TO_TICKS(SENSOR_READ_INTERVAL_MS));
   }
 }
 

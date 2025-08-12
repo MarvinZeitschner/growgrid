@@ -33,6 +33,8 @@ static void read_soil_moisture_task(void *pvParameter) {
   }
   soil_sensor_set_calibration(soil_handle, SOIL_OUT_MAX, SOIL_OUT_MIN);
 
+  TickType_t last_wake_time = xTaskGetTickCount();
+
   while (1) {
     int soil = -1;
 
@@ -50,7 +52,7 @@ static void read_soil_moisture_task(void *pvParameter) {
         ESP_LOGE(TAG, "Failed to acquire mutex");
       }
     }
-    vTaskDelay(pdMS_TO_TICKS(SENSOR_READ_INTERVAL_MS));
+    vTaskDelayUntil(&last_wake_time, pdMS_TO_TICKS(SENSOR_READ_INTERVAL_MS));
   }
 }
 
