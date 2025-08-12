@@ -1,6 +1,7 @@
 #include "fast_sensor_service.h"
 #include "app_config.h"
 #include "bmp280.h"
+#include "board.h"
 #include "esp_err.h"
 #include "esp_log.h"
 #include "freertos/idf_additions.h"
@@ -8,11 +9,12 @@
 #include "freertos/queue.h"
 #include "sensor_data.h"
 #include "tsl2561.h"
+#include <stdint.h>
+#include <string.h>
 
 static const char *TAG = "FAST_SENSOR_SERVICE";
 
 typedef struct {
-  i2c_bus_handle_t i2c_handle;
   EventGroupHandle_t event_group;
   QueueHandle_t data_queue;
   SemaphoreHandle_t data_mutex;
@@ -22,35 +24,36 @@ typedef struct {
 static void fast_sensor_task(void *pvParameter) {
   task_params_t config = *(task_params_t *)pvParameter;
 
-  bmp280_handle_t bmp280_handle =
-      bmp280_create(config.i2c_handle, BMP280_I2C_ADDRESS_DEFAULT);
-  if (bmp280_handle == NULL) {
-    ESP_LOGE(TAG, "Failed to create BMP280 handle in task.");
-    bmp280_delete(&bmp280_handle);
-    vTaskDelete(NULL);
-  }
-  ESP_ERROR_CHECK(bmp280_default_init(bmp280_handle));
+  bmp280_t bmp280 = {0};
+  bmp280_params_t params = {.mode = BMP280_MODE_NORMAL,
+                            .filter = BMP280_FILTER_OFF,
+                            .oversampling_pressure = BMP280_ULTRA_HIGH_RES,
+                            .oversampling_temperature = BMP280_ULTRA_HIGH_RES,
+                            .oversampling_humidity = BMP280_ULTRA_HIGH_RES,
+                            .standby = BMP280_STANDBY_250};
+  bmp280_init(&bmp280, &params);
 
-  tsl2561_handle_t tsl2561_handle =
-      tsl2561_create(config.i2c_handle, TSL2561_I2C_ADDR);
-  if (tsl2561_handle == NULL) {
-    ESP_LOGE(TAG, "Failed to create TSL2561 handle in task.");
-    bmp280_delete(&bmp280_handle);
-    tsl2561_delete(&tsl2561_handle);
-    vTaskDelete(NULL);
-  }
-  ESP_ERROR_CHECK(tsl2561_default_init(tsl2561_handle));
+  ESP_ERROR_CHECK(bmp280_init_desc(&bmp280, BMP280_I2C_ADDRESS_0, 0,
+                                   I2C_SDA_PIN, I2C_SCL_PIN));
+  ESP_ERROR_CHECK(bmp280_init(&bmp280, &params));
+
+  tsl2561_t tsl2561 = {0};
+  ESP_ERROR_CHECK(tsl2561_init_desc(&tsl2561, TSL2561_I2C_ADDR_FLOAT, 0,
+                                    I2C_SDA_PIN, I2C_SCL_PIN));
+  tsl2561_set_integration_time(&tsl2561, TSL2561_INTEGRATION_402MS);
+  ESP_ERROR_CHECK(tsl2561_init(&tsl2561));
 
   ESP_LOGI(TAG, "Initialized BMP280 + TSL2561");
+
+  float temp = -999.f;
+  uint32_t lux = -1;
+  float pressure;
 
   TickType_t last_wake_time = xTaskGetTickCount();
 
   while (1) {
-    float temp = -999.f;
-    int lux = -1;
-
-    esp_err_t temp_res = bmp280_read_temperature(bmp280_handle, &temp);
-    esp_err_t lux_res = tsl2561_read_lux(tsl2561_handle, &lux);
+    esp_err_t temp_res = bmp280_read_float(&bmp280, &temp, &pressure, NULL);
+    esp_err_t lux_res = tsl2561_read_lux(&tsl2561, &lux);
 
     if (temp_res == ESP_OK || lux_res == ESP_OK) {
       if (xSemaphoreTake(config.data_mutex,
@@ -76,14 +79,12 @@ static void fast_sensor_task(void *pvParameter) {
   }
 }
 
-esp_err_t fast_sensor_service_start(i2c_bus_handle_t i2c_handle,
-                                    QueueHandle_t data_queue,
+esp_err_t fast_sensor_service_start(QueueHandle_t data_queue,
                                     EventGroupHandle_t event_group,
                                     SemaphoreHandle_t data_mutex,
                                     SensorData_t *shared_sensor_data) {
   static task_params_t params;
 
-  params.i2c_handle = i2c_handle;
   params.data_queue = data_queue;
   params.event_group = event_group;
   params.data_mutex = data_mutex;
