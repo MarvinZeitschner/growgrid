@@ -26,9 +26,9 @@ static void fast_sensor_task(void *pvParameter) {
   bmp280_t bmp280 = {0};
   bmp280_params_t params = {.mode = BMP280_MODE_NORMAL,
                             .filter = BMP280_FILTER_OFF,
-                            .oversampling_pressure = BMP280_ULTRA_HIGH_RES,
+                            .oversampling_pressure = BMP280_SKIPPED,
                             .oversampling_temperature = BMP280_ULTRA_HIGH_RES,
-                            .oversampling_humidity = BMP280_ULTRA_HIGH_RES,
+                            .oversampling_humidity = BMP280_SKIPPED,
                             .standby = BMP280_STANDBY_250};
 
   ESP_ERROR_CHECK(bmp280_init_desc(&bmp280, BMP280_I2C_ADDRESS_0, 0,
