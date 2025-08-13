@@ -1,4 +1,3 @@
-#include "app_config.h"
 #include "esp_log.h"
 #include "fast_sensor_service.h"
 #include "freertos/FreeRTOS.h" // IWYU pragma: keep - required before other FreeRTOS headers
@@ -28,8 +27,8 @@ void app_main(void) {
   ESP_ERROR_CHECK(wifi_manager_init_sta());
   ESP_LOGI(TAG, "WiFi connected.");
 
-  ESP_ERROR_CHECK(i2cdev_init());
   ESP_LOGI(TAG, "Initializing hardware buses...");
+  ESP_ERROR_CHECK(i2cdev_init());
 
   EventGroupHandle_t sensor_event_group = xEventGroupCreate();
   if (sensor_event_group == NULL) {
@@ -51,8 +50,8 @@ void app_main(void) {
 
   ESP_LOGI(TAG, "Initializing MQTT manager...");
   ESP_ERROR_CHECK(mqtt_manager_start());
-  ESP_ERROR_CHECK(mqtt_manager_start_publisher(
-      sensor_event_group, data_mutex, &shared_sensor_data));
+  ESP_ERROR_CHECK(mqtt_manager_start_publisher(sensor_event_group, data_mutex,
+                                               &shared_sensor_data));
 
   ESP_LOGI(TAG, "Application startup complete. System is running.");
 }

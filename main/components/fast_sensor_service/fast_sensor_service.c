@@ -30,7 +30,6 @@ static void fast_sensor_task(void *pvParameter) {
                             .oversampling_temperature = BMP280_ULTRA_HIGH_RES,
                             .oversampling_humidity = BMP280_ULTRA_HIGH_RES,
                             .standby = BMP280_STANDBY_250};
-  bmp280_init(&bmp280, &params);
 
   ESP_ERROR_CHECK(bmp280_init_desc(&bmp280, BMP280_I2C_ADDRESS_0, 0,
                                    I2C_SDA_PIN, I2C_SCL_PIN));
