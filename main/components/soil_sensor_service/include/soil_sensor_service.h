@@ -6,8 +6,7 @@
 #include "sensor_data.h"
 #include <stdint.h>
 
-esp_err_t soil_sensor_service_start(QueueHandle_t data_queue,
-                                    EventGroupHandle_t event_group,
+esp_err_t soil_sensor_service_start(EventGroupHandle_t event_group,
                                     SemaphoreHandle_t data_mutex,
                                     SensorData_t *shared_sensor_data);
 

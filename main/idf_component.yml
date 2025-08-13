@@ -2,5 +2,6 @@ dependencies:
   idf:
     version: '>=4.1.0'
   espressif/led_strip: '*'
-  espressif/i2c_bus: =*
-  maucke/bmp280: ^1.0.1
+  esp-idf-lib/tsl2561: '*'
+  esp-idf-lib/bmp280: '*'
+  esp-idf-lib/i2cdev: '*'

@@ -8,5 +8,4 @@ idf_component_register(
   app_config
   bmp280
   tsl2561
-  bus_manager
   sensor_data)

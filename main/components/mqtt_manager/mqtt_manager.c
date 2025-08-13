@@ -54,8 +54,12 @@ static void mqtt_publisher_task(void *pvParameter) {
 
   while (1) {
     EventBits_t bits = xEventGroupWaitBits(
-        config.event_group, EVENT_SENSOR_ALL_BITS, pdTRUE, pdTRUE,
+        config.event_group, EVENT_SENSOR_ALL_BITS, pdTRUE, pdFALSE,
         pdMS_TO_TICKS(EVENT_SENSOR_WAIT_TIMEOUT_MS));
+
+    if (bits == 0) {
+      continue;
+    }
 
     if (xSemaphoreTake(config.data_mutex,
                        pdMS_TO_TICKS(SHARED_DATA_SEMAPHORE_TIMEOUT_MS)) ==
@@ -64,6 +68,7 @@ static void mqtt_publisher_task(void *pvParameter) {
       xSemaphoreGive(config.data_mutex);
     } else {
       ESP_LOGE(TAG, "Failed to acquire mutex for shared sensor data.");
+      continue;
     }
 
     if (mqtt_manager_is_connected()) {
@@ -81,7 +86,6 @@ static void mqtt_publisher_task(void *pvParameter) {
     } else {
       ESP_LOGW(TAG, "MQTT not connected, skipping publish.");
     }
-    vTaskDelay(pdMS_TO_TICKS(SENSOR_READ_INTERVAL_MS));
   }
 }
 
@@ -146,12 +150,10 @@ esp_err_t mqtt_manager_publish(const char *topic, const char *data) {
 
 bool mqtt_manager_is_connected(void) { return s_mqtt_connected; }
 
-esp_err_t mqtt_manager_start_publisher(QueueHandle_t data_queue,
-                                       EventGroupHandle_t event_group,
+esp_err_t mqtt_manager_start_publisher(EventGroupHandle_t event_group,
                                        SemaphoreHandle_t data_mutex,
                                        SensorData_t *shared_data) {
   static task_params_t params;
-  params.data_queue = data_queue;
   params.event_group = event_group;
   params.data_mutex = data_mutex;
   params.shared_sensor_data = shared_data;

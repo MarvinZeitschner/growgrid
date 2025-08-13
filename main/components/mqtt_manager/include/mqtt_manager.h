@@ -23,8 +23,7 @@ esp_err_t mqtt_manager_start(void);
  * @param shared_data Pointer to the shared sensor data structure.
  * @return ESP_OK on success, ESP_FAIL on failure.
  */
-esp_err_t mqtt_manager_start_publisher(QueueHandle_t data_queue,
-                                       EventGroupHandle_t event_group,
+esp_err_t mqtt_manager_start_publisher(EventGroupHandle_t event_group,
                                        SemaphoreHandle_t data_mutex,
                                        SensorData_t *shared_data);
 
