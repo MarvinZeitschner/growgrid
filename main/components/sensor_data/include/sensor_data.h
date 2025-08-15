@@ -4,6 +4,7 @@
 
 typedef struct {
   float temperature;
+  float humidity;
   int light;
   int soil_moisture;
 } SensorData_t;

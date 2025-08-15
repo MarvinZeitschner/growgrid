@@ -6,6 +6,7 @@
 #include "i2cdev.h"
 #include "mqtt_manager.h"
 #include "nvs_flash.h"
+#include "pump_control_service.h"
 #include "sensor_data.h"
 #include "soil_sensor_service.h"
 #include "wifi_manager.h"
@@ -52,6 +53,8 @@ void app_main(void) {
   ESP_ERROR_CHECK(mqtt_manager_start());
   ESP_ERROR_CHECK(mqtt_manager_start_publisher(sensor_event_group, data_mutex,
                                                &shared_sensor_data));
+  ESP_LOGI(TAG, "Initializing pump control...");
+  ESP_ERROR_CHECK(pump_control_service_start());
 
   ESP_LOGI(TAG, "Application startup complete. System is running.");
 }

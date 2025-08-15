@@ -9,5 +9,3 @@
 esp_err_t soil_sensor_service_start(EventGroupHandle_t event_group,
                                     SemaphoreHandle_t data_mutex,
                                     SensorData_t *shared_sensor_data);
-
-uint8_t soil_sensor_get_wake_count();

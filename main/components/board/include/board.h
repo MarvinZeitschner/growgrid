@@ -12,4 +12,6 @@
 #define SOIL_OUT_MAX 2200
 #define SOIL_OUT_MIN 900
 
+#define PUMP_RELAY_GPIO GPIO_NUM_10
+
 #endif

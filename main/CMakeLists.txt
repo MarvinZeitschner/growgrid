@@ -7,6 +7,7 @@ idf_component_register(
   sensor_data
   wifi_manager
   mqtt_manager
+  pump_control_service
   fast_sensor_service
   soil_sensor_service
   nvs_flash)

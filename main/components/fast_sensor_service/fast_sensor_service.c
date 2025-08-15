@@ -27,8 +27,8 @@ static void fast_sensor_task(void *pvParameter) {
   bmp280_params_t params = {.mode = BMP280_MODE_NORMAL,
                             .filter = BMP280_FILTER_OFF,
                             .oversampling_pressure = BMP280_SKIPPED,
-                            .oversampling_temperature = BMP280_ULTRA_HIGH_RES,
-                            .oversampling_humidity = BMP280_SKIPPED,
+                            .oversampling_temperature = BMP280_STANDARD,
+                            .oversampling_humidity = BMP280_STANDARD,
                             .standby = BMP280_STANDBY_250};
 
   ESP_ERROR_CHECK(bmp280_init_desc(&bmp280, BMP280_I2C_ADDRESS_0, 0,
@@ -44,22 +44,26 @@ static void fast_sensor_task(void *pvParameter) {
   ESP_LOGI(TAG, "Initialized BMP280 + TSL2561");
 
   float temp = -999.f;
+  float humidity = -999.f;
   uint32_t lux = -1;
   float pressure;
 
   TickType_t last_wake_time = xTaskGetTickCount();
 
   while (1) {
-    esp_err_t temp_res = bmp280_read_float(&bmp280, &temp, &pressure, NULL);
+    esp_err_t bmp_res = bmp280_read_float(&bmp280, &temp, &pressure, &humidity);
     esp_err_t lux_res = tsl2561_read_lux(&tsl2561, &lux);
 
-    if (temp_res == ESP_OK || lux_res == ESP_OK) {
+    if (bmp_res == ESP_OK || lux_res == ESP_OK) {
       if (xSemaphoreTake(config.data_mutex,
                          pdMS_TO_TICKS(SHARED_DATA_SEMAPHORE_TIMEOUT_MS)) ==
           pdTRUE) {
-        if (temp_res == ESP_OK) {
+        if (bmp_res == ESP_OK) {
           config.shared_sensor_data->temperature = temp;
           xEventGroupSetBits(config.event_group, EVENT_SENSOR_TEMP_BIT);
+
+          config.shared_sensor_data->humidity = humidity;
+          xEventGroupSetBits(config.event_group, EVENT_SENSOR_HUM_BIT);
         }
 
         if (lux_res == ESP_OK) {

@@ -76,6 +76,9 @@ static void mqtt_publisher_task(void *pvParameter) {
         publish_float_reading("temperature",
                               local_sensor_data_copy.temperature);
       }
+      if (bits & EVENT_SENSOR_HUM_BIT) {
+        publish_float_reading("humidity", local_sensor_data_copy.humidity);
+      }
       if (bits & EVENT_SENSOR_LUX_BIT) {
         publish_int_reading("light", local_sensor_data_copy.light);
       }

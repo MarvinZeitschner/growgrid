@@ -1,11 +1,9 @@
 idf_component_register(
   SRCS
-  "mqtt_manager.c"
+  "pump_control_service.c"
   INCLUDE_DIRS
   "include"
   REQUIRES
   board
   app_config
-  sensor_data
-  mqtt
-  secrets)
+  esp_driver_gpio)
