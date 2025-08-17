@@ -1,6 +1,7 @@
 #include "platform_sntp.h"
 #include "esp_log.h"
 #include "esp_sntp.h"
+#include "secrets.h"
 #include <time.h>
 
 static const char *TAG = "SNTP";
@@ -12,7 +13,7 @@ static void time_sync_notification_cb(struct timeval *tv) {
 void platform_sntp_init(void) {
   ESP_LOGI(TAG, "Initializing SNTP");
   esp_sntp_setoperatingmode(ESP_SNTP_OPMODE_POLL);
-  esp_sntp_setservername(0, "pool.ntp.org");
+  esp_sntp_setservername(0, NTP_IP);
   sntp_set_time_sync_notification_cb(time_sync_notification_cb);
   esp_sntp_init();
 

@@ -4,9 +4,7 @@
 /**
  * @brief Starts the sensor reading tasks.
  *
- * This will create two tasks:
- * 1. A high-frequency task for temperature, humidity, and light.
- * 2. A low-frequency task for soil moisture.
+ * This will create a separate FreeRTOS task for each sensor.
  *
  * @return ESP_OK on success.
  */

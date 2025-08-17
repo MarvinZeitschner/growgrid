@@ -10,14 +10,13 @@
 
 static const char *TAG = "SENSOR_TASKS";
 
-static void fast_sensor_task(void *pvParameters) {
+static void temp_humidity_sensor_task(void *pvParameters) {
   TickType_t last_wake_time = xTaskGetTickCount();
-  ESP_LOGI(TAG, "Fast sensor task started");
+  ESP_LOGI(TAG, "Temperature & Humidity sensor task started");
 
   while (1) {
     event_t event;
     temp_humidity_data_t temp_hum_data;
-    light_data_t light_data;
     struct timeval tv_now;
 
     if (hal_sensors_read_temp_humidity(&temp_hum_data) == ESP_OK) {
@@ -31,6 +30,19 @@ static void fast_sensor_task(void *pvParameters) {
     } else {
       ESP_LOGE(TAG, "Failed to read temperature/humidity");
     }
+    vTaskDelayUntil(&last_wake_time,
+                    pdMS_TO_TICKS(TEMP_SENSOR_READ_INTERVAL_MS));
+  }
+}
+
+static void light_sensor_task(void *pvParameters) {
+  TickType_t last_wake_time = xTaskGetTickCount();
+  ESP_LOGI(TAG, "Light sensor task started");
+
+  while (1) {
+    event_t event;
+    light_data_t light_data;
+    struct timeval tv_now;
 
     if (hal_sensors_read_light(&light_data) == ESP_OK) {
       gettimeofday(&tv_now, NULL);
@@ -43,15 +55,14 @@ static void fast_sensor_task(void *pvParameters) {
     } else {
       ESP_LOGE(TAG, "Failed to read light");
     }
-
     vTaskDelayUntil(&last_wake_time,
-                    pdMS_TO_TICKS(FAST_SENSOR_READ_INTERVAL_MS));
+                    pdMS_TO_TICKS(LIGHT_SENSOR_READ_INTERVAL_MS));
   }
 }
 
-static void slow_sensor_task(void *pvParameters) {
+static void soil_moisture_sensor_task(void *pvParameters) {
   TickType_t last_wake_time = xTaskGetTickCount();
-  ESP_LOGI(TAG, "Slow sensor task started");
+  ESP_LOGI(TAG, "Soil Moisture sensor task started");
 
   while (1) {
     event_t event;
@@ -69,22 +80,32 @@ static void slow_sensor_task(void *pvParameters) {
     } else {
       ESP_LOGE(TAG, "Failed to read soil moisture");
     }
-
     vTaskDelayUntil(&last_wake_time,
-                    pdMS_TO_TICKS(SLOW_SENSOR_READ_INTERVAL_MS));
+                    pdMS_TO_TICKS(SOIL_SENSOR_READ_INTERVAL_MS));
   }
 }
 
 esp_err_t app_sensor_tasks_start(void) {
-  if (xTaskCreate(fast_sensor_task, "fast_sensor_task", TASK_STACK_FAST_SENSOR,
-                  NULL, TASK_PRIO_FAST_SENSOR, NULL) != pdPASS) {
-    ESP_LOGE(TAG, "Failed to create fast sensor task");
+  if (xTaskCreate(temp_humidity_sensor_task, "temp_humidity_sensor_task",
+                  TASK_STACK_TEMP_SENSOR, NULL, TASK_PRIO_TEMP_SENSOR,
+                  NULL) != pdPASS) {
+    ESP_LOGE(TAG, "Failed to create temp_humidity_sensor_task");
     return ESP_FAIL;
   }
-  if (xTaskCreate(slow_sensor_task, "slow_sensor_task", TASK_STACK_SLOW_SENSOR,
-                  NULL, TASK_PRIO_SLOW_SENSOR, NULL) != pdPASS) {
-    ESP_LOGE(TAG, "Failed to create slow sensor task");
+
+  if (xTaskCreate(light_sensor_task, "light_sensor_task",
+                  TASK_STACK_LIGHT_SENSOR, NULL, TASK_PRIO_LIGHT_SENSOR,
+                  NULL) != pdPASS) {
+    ESP_LOGE(TAG, "Failed to create light_sensor_task");
     return ESP_FAIL;
   }
+
+  if (xTaskCreate(soil_moisture_sensor_task, "soil_moisture_sensor_task",
+                  TASK_STACK_SOIL_SENSOR, NULL, TASK_PRIO_SOIL_SENSOR,
+                  NULL) != pdPASS) {
+    ESP_LOGE(TAG, "Failed to create soil_moisture_sensor_task");
+    return ESP_FAIL;
+  }
+
   return ESP_OK;
 }
