@@ -1,5 +1,6 @@
 #include "platform_mqtt.h"
 #include "app_config.h"
+#include "cJSON.h"
 #include "esp_log.h"
 #include "event_bus.h"
 #include "mqtt_client.h"
@@ -39,34 +40,57 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
 }
 
 static void publish_sensor_data(const sensor_data_t *data) {
-  if (!s_mqtt_connected)
+  if (!s_mqtt_connected) {
     return;
+  }
 
   char topic[128];
-  char payload[32];
+  cJSON *root = NULL;
+  char *payload_str = NULL;
 
   switch (data->type) {
   case SENSOR_DATA_TYPE_TEMP_HUMIDITY:
+    root = cJSON_CreateObject();
+    cJSON_AddNumberToObject(root, "value",
+                            data->payload.temp_humidity.temperature);
+    cJSON_AddNumberToObject(root, "timestamp_us", (double)data->timestamp_us);
+    payload_str = cJSON_PrintUnformatted(root);
     snprintf(topic, sizeof(topic), "growgrid/telemetry/temperature");
-    snprintf(payload, sizeof(payload), "%.2f",
-             data->payload.temp_humidity.temperature);
-    esp_mqtt_client_publish(s_client, topic, payload, 0, 1, 0);
+    esp_mqtt_client_publish(s_client, topic, payload_str, 0, 1, 0);
+    free(payload_str);
+    cJSON_Delete(root);
 
+    root = cJSON_CreateObject();
+    cJSON_AddNumberToObject(root, "value",
+                            data->payload.temp_humidity.humidity);
+    cJSON_AddNumberToObject(root, "timestamp_us", (double)data->timestamp_us);
+    payload_str = cJSON_PrintUnformatted(root);
     snprintf(topic, sizeof(topic), "growgrid/telemetry/humidity");
-    snprintf(payload, sizeof(payload), "%.2f",
-             data->payload.temp_humidity.humidity);
-    esp_mqtt_client_publish(s_client, topic, payload, 0, 1, 0);
+    esp_mqtt_client_publish(s_client, topic, payload_str, 0, 1, 0);
+    free(payload_str);
+    cJSON_Delete(root);
     break;
+
   case SENSOR_DATA_TYPE_LIGHT:
+    root = cJSON_CreateObject();
+    cJSON_AddNumberToObject(root, "value", data->payload.light.lux);
+    cJSON_AddNumberToObject(root, "timestamp_us", (double)data->timestamp_us);
+    payload_str = cJSON_PrintUnformatted(root);
     snprintf(topic, sizeof(topic), "growgrid/telemetry/light");
-    snprintf(payload, sizeof(payload), "%d", (int)data->payload.light.lux);
-    esp_mqtt_client_publish(s_client, topic, payload, 0, 1, 0);
+    esp_mqtt_client_publish(s_client, topic, payload_str, 0, 1, 0);
+    free(payload_str);
+    cJSON_Delete(root);
     break;
+
   case SENSOR_DATA_TYPE_SOIL_MOISTURE:
+    root = cJSON_CreateObject();
+    cJSON_AddNumberToObject(root, "value", data->payload.soil_moisture.percent);
+    cJSON_AddNumberToObject(root, "timestamp_us", (double)data->timestamp_us);
+    payload_str = cJSON_PrintUnformatted(root);
     snprintf(topic, sizeof(topic), "growgrid/telemetry/soil_moisture");
-    snprintf(payload, sizeof(payload), "%d",
-             data->payload.soil_moisture.percent);
-    esp_mqtt_client_publish(s_client, topic, payload, 0, 1, 0);
+    esp_mqtt_client_publish(s_client, topic, payload_str, 0, 1, 0);
+    free(payload_str);
+    cJSON_Delete(root);
     break;
   }
 }

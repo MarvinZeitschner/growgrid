@@ -6,6 +6,7 @@
 #include "hal_sensors.h"
 #include "nvs_flash.h"
 #include "platform_mqtt.h"
+#include "platform_sntp.h"
 #include "platform_wifi.h"
 #include "pump_control_task.h"
 #include "sensor_tasks.h"
@@ -29,6 +30,9 @@ esp_err_t app_controller_init(void) {
   ESP_LOGI(TAG, "Initializing WiFi...");
   ESP_ERROR_CHECK(platform_wifi_init_sta());
   ESP_LOGI(TAG, "WiFi connected.");
+
+  ESP_LOGI(TAG, "Initializing SNTP...");
+  platform_sntp_init();
 
   ESP_LOGI(TAG, "Initializing MQTT...");
   ESP_ERROR_CHECK(platform_mqtt_init());

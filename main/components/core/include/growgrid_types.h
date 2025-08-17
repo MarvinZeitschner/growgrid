@@ -27,6 +27,7 @@ typedef union {
 } sensor_data_payload_t;
 
 typedef struct {
+  uint64_t timestamp_us;
   sensor_data_type_t type;
   sensor_data_payload_t payload;
 } sensor_data_t;

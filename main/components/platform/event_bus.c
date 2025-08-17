@@ -2,19 +2,13 @@
 #include "esp_log.h"
 #include "freertos/semphr.h"
 #include <string.h>
-#include <sys/queue.h>
 
 #define MAX_SUBSCRIBERS 10
-#define EVENT_BUS_QUEUE_SIZE 16
+#define EVENT_BUS_QUEUE_SIZE 32
 
 static const char *TAG = "EVENT_BUS";
 
-typedef struct subscriber_node {
-  QueueHandle_t queue;
-  SLIST_ENTRY(subscriber_node) entries;
-} subscriber_node_t;
-
-static SLIST_HEAD(subscriber_list_head, subscriber_node) s_subscriber_list;
+static QueueHandle_t s_subscriber_queues[MAX_SUBSCRIBERS];
 static SemaphoreHandle_t s_subscriber_list_mutex;
 static QueueHandle_t s_event_bus_queue;
 
@@ -23,11 +17,12 @@ static void event_distributor_task(void *arg) {
   while (1) {
     if (xQueueReceive(s_event_bus_queue, &event, portMAX_DELAY) == pdTRUE) {
       if (xSemaphoreTake(s_subscriber_list_mutex, portMAX_DELAY) == pdTRUE) {
-        subscriber_node_t *node;
-        SLIST_FOREACH(node, &s_subscriber_list, entries) {
-          if (xQueueSend(node->queue, &event, 0) != pdTRUE) {
-            ESP_LOGW(TAG,
-                     "Subscriber queue full, event dropped for a subscriber");
+        for (int i = 0; i < MAX_SUBSCRIBERS; i++) {
+          if (s_subscriber_queues[i] != NULL) {
+            if (xQueueSend(s_subscriber_queues[i], &event, 0) != pdTRUE) {
+              ESP_LOGW(TAG,
+                       "Subscriber queue full, event dropped for a subscriber");
+            }
           }
         }
         xSemaphoreGive(s_subscriber_list_mutex);
@@ -37,7 +32,8 @@ static void event_distributor_task(void *arg) {
 }
 
 esp_err_t event_bus_init(void) {
-  SLIST_INIT(&s_subscriber_list);
+  memset(s_subscriber_queues, 0, sizeof(s_subscriber_queues));
+
   s_subscriber_list_mutex = xSemaphoreCreateMutex();
   if (s_subscriber_list_mutex == NULL) {
     ESP_LOGE(TAG, "Failed to create subscriber list mutex");
@@ -75,41 +71,40 @@ esp_err_t event_bus_post(const event_t *event, uint32_t timeout_ms) {
 }
 
 QueueHandle_t event_bus_subscribe(void) {
-  QueueHandle_t new_queue = xQueueCreate(EVENT_BUS_QUEUE_SIZE, sizeof(event_t));
-  if (new_queue == NULL) {
-    ESP_LOGE(TAG, "Failed to create subscriber queue");
-    return NULL;
-  }
-
-  subscriber_node_t *new_node = malloc(sizeof(subscriber_node_t));
-  if (new_node == NULL) {
-    ESP_LOGE(TAG, "Failed to allocate memory for subscriber node");
-    vQueueDelete(new_queue);
-    return NULL;
-  }
-  new_node->queue = new_queue;
+  QueueHandle_t new_queue = NULL;
 
   if (xSemaphoreTake(s_subscriber_list_mutex, portMAX_DELAY) == pdTRUE) {
-    SLIST_INSERT_HEAD(&s_subscriber_list, new_node, entries);
+    for (int i = 0; i < MAX_SUBSCRIBERS; i++) {
+      if (s_subscriber_queues[i] == NULL) {
+        new_queue = xQueueCreate(EVENT_BUS_QUEUE_SIZE, sizeof(event_t));
+        if (new_queue == NULL) {
+          ESP_LOGE(TAG, "Failed to create subscriber queue");
+          break;
+        }
+        s_subscriber_queues[i] = new_queue;
+        ESP_LOGI(TAG, "New subscriber added to slot %d", i);
+        break;
+      }
+    }
     xSemaphoreGive(s_subscriber_list_mutex);
-  }
 
-  ESP_LOGI(TAG, "New subscriber added");
+    if (new_queue == NULL) {
+      ESP_LOGE(TAG, "Failed to add new subscriber, all slots are full.");
+    }
+  }
   return new_queue;
 }
 
 void event_bus_unsubscribe(QueueHandle_t queue) {
   if (xSemaphoreTake(s_subscriber_list_mutex, portMAX_DELAY) == pdTRUE) {
-    subscriber_node_t *node, *temp;
-    SLIST_FOREACH_SAFE(node, &s_subscriber_list, entries, temp) {
-      if (node->queue == queue) {
-        SLIST_REMOVE(&s_subscriber_list, node, subscriber_node, entries);
-        vQueueDelete(node->queue);
-        free(node);
+    for (int i = 0; i < MAX_SUBSCRIBERS; i++) {
+      if (s_subscriber_queues[i] == queue) {
+        vQueueDelete(s_subscriber_queues[i]);
+        s_subscriber_queues[i] = NULL;
+        ESP_LOGI(TAG, "Subscriber removed from slot %d", i);
         break;
       }
     }
     xSemaphoreGive(s_subscriber_list_mutex);
   }
-  ESP_LOGI(TAG, "Subscriber removed");
 }

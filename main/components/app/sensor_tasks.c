@@ -6,6 +6,7 @@
 #include "freertos/task.h"
 #include "growgrid_types.h"
 #include "hal_sensors.h"
+#include <sys/time.h>
 
 static const char *TAG = "SENSOR_TASKS";
 
@@ -17,20 +18,27 @@ static void fast_sensor_task(void *pvParameters) {
     event_t event;
     temp_humidity_data_t temp_hum_data;
     light_data_t light_data;
+    struct timeval tv_now;
 
     if (hal_sensors_read_temp_humidity(&temp_hum_data) == ESP_OK) {
+      gettimeofday(&tv_now, NULL);
       event.type = EVENT_TYPE_SENSOR_DATA;
       event.data.sensor_data.type = SENSOR_DATA_TYPE_TEMP_HUMIDITY;
       event.data.sensor_data.payload.temp_humidity = temp_hum_data;
+      event.data.sensor_data.timestamp_us =
+          (uint64_t)tv_now.tv_sec * 1000000L + (uint64_t)tv_now.tv_usec;
       event_bus_post(&event, pdMS_TO_TICKS(EVENT_BUS_POST_TIMEOUT_MS));
     } else {
       ESP_LOGE(TAG, "Failed to read temperature/humidity");
     }
 
     if (hal_sensors_read_light(&light_data) == ESP_OK) {
+      gettimeofday(&tv_now, NULL);
       event.type = EVENT_TYPE_SENSOR_DATA;
       event.data.sensor_data.type = SENSOR_DATA_TYPE_LIGHT;
       event.data.sensor_data.payload.light = light_data;
+      event.data.sensor_data.timestamp_us =
+          (uint64_t)tv_now.tv_sec * 1000000L + (uint64_t)tv_now.tv_usec;
       event_bus_post(&event, pdMS_TO_TICKS(EVENT_BUS_POST_TIMEOUT_MS));
     } else {
       ESP_LOGE(TAG, "Failed to read light");
@@ -48,11 +56,15 @@ static void slow_sensor_task(void *pvParameters) {
   while (1) {
     event_t event;
     soil_moisture_data_t soil_data;
+    struct timeval tv_now;
 
     if (hal_sensors_read_soil_moisture(&soil_data) == ESP_OK) {
+      gettimeofday(&tv_now, NULL);
       event.type = EVENT_TYPE_SENSOR_DATA;
       event.data.sensor_data.type = SENSOR_DATA_TYPE_SOIL_MOISTURE;
       event.data.sensor_data.payload.soil_moisture = soil_data;
+      event.data.sensor_data.timestamp_us =
+          (uint64_t)tv_now.tv_sec * 1000000L + (uint64_t)tv_now.tv_usec;
       event_bus_post(&event, pdMS_TO_TICKS(EVENT_BUS_POST_TIMEOUT_MS));
     } else {
       ESP_LOGE(TAG, "Failed to read soil moisture");
