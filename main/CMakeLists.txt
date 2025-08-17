@@ -1,13 +1,1 @@
-idf_component_register(
-  SRCS
-  "app_main.c"
-  REQUIRES
-  i2cdev
-  app_config
-  sensor_data
-  wifi_manager
-  mqtt_manager
-  pump_control_service
-  fast_sensor_service
-  soil_sensor_service
-  nvs_flash)
+idf_component_register(SRCS "app_main.c" REQUIRES app)

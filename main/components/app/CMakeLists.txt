@@ -1,0 +1,12 @@
+idf_component_register(
+  SRCS
+  "app_controller.c"
+  "sensor_tasks.c"
+  "pump_control_task.c"
+  INCLUDE_DIRS
+  "include"
+  REQUIRES
+  nvs_flash
+  core
+  g_hal
+  platform)

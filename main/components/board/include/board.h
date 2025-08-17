@@ -1,6 +1,8 @@
 #ifndef BOARD_H
 #define BOARD_H
 
+#include "soc/gpio_num.h"
+
 #define LED_RGB_GPIO GPIO_NUM_8
 
 #define I2C_PORT I2C_NUM_0

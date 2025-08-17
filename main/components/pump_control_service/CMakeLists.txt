@@ -1,9 +1,0 @@
-idf_component_register(
-  SRCS
-  "pump_control_service.c"
-  INCLUDE_DIRS
-  "include"
-  REQUIRES
-  board
-  app_config
-  esp_driver_gpio)
