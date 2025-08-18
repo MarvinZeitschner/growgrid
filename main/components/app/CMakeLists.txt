@@ -9,4 +9,6 @@ idf_component_register(
   nvs_flash
   core
   g_hal
-  platform)
+  platform
+  storage
+  provisioning)

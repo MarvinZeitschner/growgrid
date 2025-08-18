@@ -10,7 +10,7 @@
  *
  * @return ESP_OK on success, ESP_FAIL on failure.
  */
-esp_err_t platform_mqtt_init(void);
+esp_err_t platform_mqtt_init(const char *broker_uri, const char *username, const char *password);
 
 /**
  * @brief Checks if the MQTT client is currently connected.

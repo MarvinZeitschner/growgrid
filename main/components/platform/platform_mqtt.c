@@ -4,7 +4,7 @@
 #include "esp_log.h"
 #include "event_bus.h"
 #include "mqtt_client.h"
-#include "secrets.h"
+
 #include <stdio.h>
 
 static const char *TAG = "PLATFORM_MQTT";
@@ -114,11 +114,11 @@ static void mqtt_publisher_task(void *pvParameters) {
   }
 }
 
-esp_err_t platform_mqtt_init(void) {
+esp_err_t platform_mqtt_init(const char *broker_uri, const char *username, const char *password) {
   esp_mqtt_client_config_t mqtt_cfg = {
-      .broker.address.uri = MQTT_BROKER,
-      .credentials.username = MQTT_USER,
-      .credentials.authentication.password = MQTT_PASS,
+      .broker.address.uri = broker_uri,
+      .credentials.username = username,
+      .credentials.authentication.password = password,
   };
 
   s_client = esp_mqtt_client_init(&mqtt_cfg);

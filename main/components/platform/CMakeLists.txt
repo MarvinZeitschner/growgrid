@@ -11,7 +11,6 @@ idf_component_register(
   esp_event
   mqtt
   core
-  secrets
   app
   json
   lwip

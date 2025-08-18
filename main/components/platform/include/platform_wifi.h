@@ -9,4 +9,4 @@
  *
  * @return ESP_OK on success, ESP_FAIL on failure.
  */
-esp_err_t platform_wifi_init_sta(void);
+esp_err_t platform_wifi_init_sta(const char *ssid, const char *pass);
