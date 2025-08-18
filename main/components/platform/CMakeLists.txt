@@ -1,0 +1,17 @@
+idf_component_register(
+  SRCS
+  "event_bus.c"
+  "platform_mqtt.c"
+  "platform_wifi.c"
+  "platform_sntp.c"
+  INCLUDE_DIRS
+  "include"
+  REQUIRES
+  esp_wifi
+  esp_event
+  mqtt
+  core
+  app
+  json
+  lwip
+  esp_netif)

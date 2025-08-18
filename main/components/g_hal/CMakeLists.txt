@@ -1,0 +1,17 @@
+idf_component_register(
+  SRCS
+  "hal_i2c.c"
+  "hal_pump.c"
+  "hal_sensors.c"
+  INCLUDE_DIRS
+  "include"
+  REQUIRES
+  driver
+  i2cdev
+  board
+  core
+  platform
+  bmp280
+  tsl2561
+  soil_sensor
+  esp_driver_gpio)
