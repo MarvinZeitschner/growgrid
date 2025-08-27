@@ -66,6 +66,8 @@
               "mode": "off"
             }
           },
+          "decimals": 2,
+          "fieldMinMax": false,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
