@@ -58,7 +58,7 @@ services:
     container_name: telegraf
     depends_on:
       influxdb2:
-        condition: service_healthy
+        condition: service_started
       mosquitto:
         condition: service_started
     environment:
