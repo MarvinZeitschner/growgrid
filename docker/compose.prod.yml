@@ -1,37 +1,60 @@
 name: growgrid
-x-common-sec: &common-sec
+
+x-common-security: &common-security
   read_only: true
   cap_drop: [ALL]
   security_opt:
     - no-new-privileges:true
+  restart: unless-stopped
 
 services:
+  config-init:
+    image: alpine:3.19
+    container_name: growgrid-config-init
+    volumes:
+      - /srv/growgrid/config/grafana/provisioning:/src:ro
+      - grafana-config:/dst
+      - /srv/growgrid/secrets:/secrets:ro
+    environment:
+      INFLUXDB_ORG: ${INFLUXDB_ORG}
+      INFLUXDB_BUCKET: ${INFLUXDB_BUCKET}
+      INFLUXDB_URL: ${INFLUXDB_URL}
+    command: |
+      sh -c '
+        export INFLUXDB_TOKEN="$$(cat /secrets/influx_token_grafana)"
+        mkdir -p /dst/datasources /dst/dashboards
+        envsubst < /src/datasources/influxdb.yml > /dst/datasources/influxdb.yml
+        envsubst < /src/dashboards/dashboards.yml > /dst/dashboards/dashboards.yml
+        echo "Configuration prepared successfully"
+      '
+    restart: "no"
+
   mosquitto:
-    build:
-      context: .
-      dockerfile: Dockerfile.mosquitto
-    container_name: mosquitto
-    restart: unless-stopped
+    image: eclipse-mosquitto:2.0.18
+    container_name: growgrid-mosquitto
+    <<: *common-security
+    read_only: false
     ports:
       - "192.168.178.45:1883:1883"
-    environment:
-      - MQTT_USERNAME_FILE=/run/secrets/mqtt_username
-      - MQTT_PASSWORD_FILE=/run/secrets/mqtt_password
-    secrets:
-      - mqtt_username
-      - mqtt_password
     volumes:
-      - /srv/growgrid/appdata/mosquitto:/mosquitto/config:ro
-      - /srv/growgrid/data/mosquitto/data:/mosquitto/data
-      - /srv/growgrid/data/mosquitto/log:/mosquitto/log
-    <<: [*common-sec]
+      - /srv/growgrid/config/mosquitto:/mosquitto/config:ro
+      - /srv/growgrid/data/mosquitto:/mosquitto/data
+      - /srv/growgrid/secrets:/mosquitto/secrets:ro
     tmpfs:
       - /tmp
+    command: |
+      sh -c '
+        if [ ! -f /mosquitto/data/passwd ]; then
+          mosquitto_passwd -b -c /mosquitto/data/passwd "$$(cat /mosquitto/secrets/mqtt_username)" "$$(cat /mosquitto/secrets/mqtt_password)"
+        fi
+        exec mosquitto -c /mosquitto/config/mosquitto.conf
+      '
 
   influxdb2:
     image: influxdb:2.7-alpine
-    container_name: influxdb2
-    restart: unless-stopped
+    container_name: growgrid-influxdb2
+    <<: *common-security
+    read_only: false
     ports:
       - "192.168.178.45:8086:8086"
     environment:
@@ -40,8 +63,8 @@ services:
       DOCKER_INFLUXDB_INIT_PASSWORD_FILE: /run/secrets/influx_password
       DOCKER_INFLUXDB_INIT_ORG: ${INFLUXDB_ORG}
       DOCKER_INFLUXDB_INIT_BUCKET: ${INFLUXDB_BUCKET}
-      INFLUXD_HTTP_BIND_ADDRESS: :8086
       DOCKER_INFLUXDB_INIT_RETENTION: 2160h
+      INFLUXD_HTTP_BIND_ADDRESS: :8086
     env_file:
       - /srv/growgrid/.env
     secrets:
@@ -49,28 +72,18 @@ services:
       - influx_password
     volumes:
       - /srv/growgrid/data/influxdb2:/var/lib/influxdb2
-      - /srv/growgrid/appdata/influxdb2/config:/etc/influxdb2
-    <<: [*common-sec]
-    read_only: false
 
   telegraf:
     image: telegraf:1.30-alpine
-    container_name: telegraf
+    container_name: growgrid-telegraf
+    <<: *common-security
     depends_on:
-      influxdb2:
-        condition: service_started
-      mosquitto:
-        condition: service_started
+      - influxdb2
+      - mosquitto
     environment:
       INFLUXDB_ORG: ${INFLUXDB_ORG}
       INFLUXDB_BUCKET: ${INFLUXDB_BUCKET}
       INFLUXDB_URL: ${INFLUXDB_URL}
-      INFLUX_TOKEN_FILE: /run/secrets/influx_token_telegraf
-      MQTT_BROKER: mosquitto
-      MQTT_PORT: 1883
-      MQTT_USERNAME_FILE: /run/secrets/mqtt_username
-      MQTT_PASSWORD_FILE: /run/secrets/mqtt_password
-      MQTT_TOPIC: ${MQTT_TOPIC}
     env_file:
       - /srv/growgrid/.env
     secrets:
@@ -78,34 +91,39 @@ services:
       - mqtt_username
       - mqtt_password
     volumes:
-      - /srv/projects/growgrid/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
-    <<: [*common-sec]
+      - /srv/growgrid/config/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    command: |
+      sh -c '
+        export INFLUX_TOKEN="$$(cat /run/secrets/influx_token_telegraf)"
+        export MQTT_USERNAME="$$(cat /run/secrets/mqtt_username)" 
+        export MQTT_PASSWORD="$$(cat /run/secrets/mqtt_password)"
+        exec telegraf --config /etc/telegraf/telegraf.conf
+      '
 
   grafana:
     image: grafana/grafana:10.4.5
-    container_name: grafana
-    restart: unless-stopped
+    container_name: growgrid-grafana
+    <<: *common-security
+    read_only: false
+    depends_on:
+      config-init:
+        condition: service_completed_successfully
     ports:
       - "192.168.178.45:3000:3000"
     environment:
       GF_SECURITY_ADMIN_USER__FILE: /run/secrets/grafana_admin_user
       GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/grafana_admin_password
-      INFLUXDB_TOKEN__FILE: /run/secrets/influx_token_grafana
-      INFLUXDB_ORG: ${INFLUXDB_ORG}
-      INFLUXDB_BUCKET: ${INFLUXDB_BUCKET}
-      INFLUXDB_URL: ${INFLUXDB_URL}
-    env_file:
-      - /srv/growgrid/.env
+      GF_INSTALL_PLUGINS: ""
     secrets:
       - grafana_admin_user
       - grafana_admin_password
-      - influx_token_grafana
     volumes:
       - /srv/growgrid/data/grafana:/var/lib/grafana
-      - /srv/projects/growgrid/grafana/provisioning:/etc/grafana/provisioning:ro
-      - /srv/projects/growgrid/grafana/dashboards:/var/lib/grafana/dashboards:ro
-    <<: [*common-sec]
-    read_only: false
+      - grafana-config:/etc/grafana/provisioning:ro
+      - /srv/growgrid/config/grafana/dashboards:/var/lib/grafana/dashboards:ro
+
+volumes:
+  grafana-config:
 
 secrets:
   mqtt_username:
