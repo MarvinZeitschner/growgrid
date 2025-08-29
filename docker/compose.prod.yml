@@ -2,7 +2,6 @@ name: growgrid
 
 x-common-security: &common-security
   read_only: true
-  cap_drop: [ALL]
   security_opt:
     - no-new-privileges:true
   restart: unless-stopped
@@ -12,9 +11,9 @@ services:
     image: alpine:3.19
     container_name: growgrid-config-init
     volumes:
-      - /srv/growgrid/config/grafana/provisioning:/src:ro
+      - ${CONFIG_PATH}/grafana/provisioning:/src:ro
       - grafana-config:/dst
-      - /srv/growgrid/secrets:/secrets:ro
+      - ${SECRETS_PATH}:/secrets:ro
     environment:
       INFLUXDB_ORG: ${INFLUXDB_ORG}
       INFLUXDB_BUCKET: ${INFLUXDB_BUCKET}
@@ -37,9 +36,9 @@ services:
     ports:
       - "1883:1883"
     volumes:
-      - /srv/growgrid/config/mosquitto:/mosquitto/config:ro
-      - /srv/growgrid/data/mosquitto:/mosquitto/data
-      - /srv/growgrid/secrets:/mosquitto/secrets:ro
+      - ${CONFIG_PATH}/mosquitto:/mosquitto/config:ro
+      - ${DATA_PATH}/mosquitto:/mosquitto/data
+      - ${SECRETS_PATH}:/mosquitto/secrets:ro
     tmpfs:
       - /tmp
     command: |
@@ -66,12 +65,12 @@ services:
       DOCKER_INFLUXDB_INIT_RETENTION: 2160h
       INFLUXD_HTTP_BIND_ADDRESS: :8086
     env_file:
-      - /srv/growgrid/.env
+      - ./.env
     secrets:
       - influx_username
       - influx_password
     volumes:
-      - /srv/growgrid/data/influxdb2:/var/lib/influxdb2
+      - ${DATA_PATH}/influxdb2:/var/lib/influxdb2
 
   telegraf:
     image: telegraf:1.30-alpine
@@ -85,13 +84,13 @@ services:
       INFLUXDB_BUCKET: ${INFLUXDB_BUCKET}
       INFLUXDB_URL: ${INFLUXDB_URL}
     env_file:
-      - /srv/growgrid/.env
+      - ./.env
     secrets:
       - influx_token_telegraf
       - mqtt_username
       - mqtt_password
     volumes:
-      - /srv/growgrid/config/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - ${CONFIG_PATH}/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
     command: |
       sh -c '
         export INFLUX_TOKEN="$(cat /run/secrets/influx_token_telegraf)"
@@ -118,27 +117,27 @@ services:
       - grafana_admin_user
       - grafana_admin_password
     volumes:
-      - /srv/growgrid/data/grafana:/var/lib/grafana
+      - ${DATA_PATH}/grafana:/var/lib/grafana
       - grafana-config:/etc/grafana/provisioning:ro
-      - /srv/growgrid/config/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ${CONFIG_PATH}/grafana/dashboards:/var/lib/grafana/dashboards:ro
 
 volumes:
   grafana-config:
 
 secrets:
   mqtt_username:
-    file: /srv/growgrid/secrets/mqtt_username
+    file: ${SECRETS_PATH}/mqtt_username
   mqtt_password:
-    file: /srv/growgrid/secrets/mqtt_password
+    file: ${SECRETS_PATH}/mqtt_password
   influx_username:
-    file: /srv/growgrid/secrets/influx_username
+    file: ${SECRETS_PATH}/influx_username
   influx_password:
-    file: /srv/growgrid/secrets/influx_password
+    file: ${SECRETS_PATH}/influx_password
   influx_token_telegraf:
-    file: /srv/growgrid/secrets/influx_token_telegraf
+    file: ${SECRETS_PATH}/influx_token_telegraf
   influx_token_grafana:
-    file: /srv/growgrid/secrets/influx_token_grafana
+    file: ${SECRETS_PATH}/influx_token_grafana
   grafana_admin_user:
-    file: /srv/growgrid/secrets/grafana_admin_user
+    file: ${SECRETS_PATH}/grafana_admin_user
   grafana_admin_password:
-    file: /srv/growgrid/secrets/grafana_admin_password
+    file: ${SECRETS_PATH}/grafana_admin_password
