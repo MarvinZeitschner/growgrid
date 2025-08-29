@@ -21,7 +21,7 @@ services:
       INFLUXDB_URL: ${INFLUXDB_URL}
     command: |
       sh -c '
-        export INFLUXDB_TOKEN="$$(cat /secrets/influx_token_grafana)"
+        export INFLUXDB_TOKEN="$(cat /secrets/influx_token_grafana)"
         mkdir -p /dst/datasources /dst/dashboards
         envsubst < /src/datasources/influxdb.yml > /dst/datasources/influxdb.yml
         envsubst < /src/dashboards/dashboards.yml > /dst/dashboards/dashboards.yml
@@ -35,7 +35,7 @@ services:
     <<: *common-security
     read_only: false
     ports:
-      - "192.168.178.45:1883:1883"
+      - "1883:1883"
     volumes:
       - /srv/growgrid/config/mosquitto:/mosquitto/config:ro
       - /srv/growgrid/data/mosquitto:/mosquitto/data
@@ -45,7 +45,7 @@ services:
     command: |
       sh -c '
         if [ ! -f /mosquitto/data/passwd ]; then
-          mosquitto_passwd -b -c /mosquitto/data/passwd "$$(cat /mosquitto/secrets/mqtt_username)" "$$(cat /mosquitto/secrets/mqtt_password)"
+          mosquitto_passwd -b -c /mosquitto/data/passwd "$(cat /mosquitto/secrets/mqtt_username)" "$(cat /mosquitto/secrets/mqtt_password)"
         fi
         exec mosquitto -c /mosquitto/config/mosquitto.conf
       '
@@ -56,7 +56,7 @@ services:
     <<: *common-security
     read_only: false
     ports:
-      - "192.168.178.45:8086:8086"
+      - "8086:8086"
     environment:
       DOCKER_INFLUXDB_INIT_MODE: setup
       DOCKER_INFLUXDB_INIT_USERNAME_FILE: /run/secrets/influx_username
@@ -94,9 +94,9 @@ services:
       - /srv/growgrid/config/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
     command: |
       sh -c '
-        export INFLUX_TOKEN="$$(cat /run/secrets/influx_token_telegraf)"
-        export MQTT_USERNAME="$$(cat /run/secrets/mqtt_username)" 
-        export MQTT_PASSWORD="$$(cat /run/secrets/mqtt_password)"
+        export INFLUX_TOKEN="$(cat /run/secrets/influx_token_telegraf)"
+        export MQTT_USERNAME="$(cat /run/secrets/mqtt_username)" 
+        export MQTT_PASSWORD="$(cat /run/secrets/mqtt_password)"
         exec telegraf --config /etc/telegraf/telegraf.conf
       '
 
@@ -109,7 +109,7 @@ services:
       config-init:
         condition: service_completed_successfully
     ports:
-      - "192.168.178.45:3000:3000"
+      - "3000:3000"
     environment:
       GF_SECURITY_ADMIN_USER__FILE: /run/secrets/grafana_admin_user
       GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/grafana_admin_password
