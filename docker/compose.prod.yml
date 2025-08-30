@@ -18,7 +18,7 @@ services:
     ports:
       - "1883:1883"
     volumes:
-      - /srv/growgrid/config/mosquitto:/mosquitto/config
+      - /srv/projects/growgrid/docker/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
       - /srv/growgrid/data/mosquitto/data:/mosquitto/data
       - /srv/growgrid/data/mosquitto/log:/mosquitto/log
 
