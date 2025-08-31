@@ -4,6 +4,7 @@
 #include "esp_log.h"
 #include "event_bus.h"
 #include "mqtt_client.h"
+#include "cert_store.h" // Include the new component header
 
 #include <stdio.h>
 
@@ -11,8 +12,7 @@ static const char *TAG = "PLATFORM_MQTT";
 static esp_mqtt_client_handle_t s_client = NULL;
 static bool s_mqtt_connected = false;
 
-static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
-                               int32_t event_id, void *event_data) {
+static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data) {
   esp_mqtt_event_handle_t event = event_data;
   switch ((esp_mqtt_event_id_t)event_id) {
   case MQTT_EVENT_CONNECTED:
@@ -20,7 +20,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
     s_mqtt_connected = true;
     event_t mqtt_event = {.type = EVENT_TYPE_MQTT_CONNECTED};
     event_bus_post(&mqtt_event, 0);
-    // esp_mqtt_client_subscribe(s_client, "growgrid/command/pump", 0);
     break;
   case MQTT_EVENT_DISCONNECTED:
     ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -119,6 +118,10 @@ esp_err_t platform_mqtt_init(const char *broker_uri, const char *username, const
       .broker.address.uri = broker_uri,
       .credentials.username = username,
       .credentials.authentication.password = password,
+      .broker.verification.certificate = (const char *)ca_cert_pem_start,
+      .credentials.authentication.certificate = (const char *)client_cert_pem_start,
+      .credentials.authentication.key = (const char *)client_key_pem_start,
+      .session.keepalive = 30,
   };
 
   s_client = esp_mqtt_client_init(&mqtt_cfg);

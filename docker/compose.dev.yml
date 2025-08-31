@@ -5,11 +5,10 @@ services:
     container_name: mosquitto
     restart: unless-stopped
     ports:
-      - "1883:1883"
+      - "8883:8883"
     volumes:
-      - ./mosquitto/mosquitto.dev.conf:/mosquitto/config/mosquitto.conf:ro
-      - mosquitto-data-dev:/mosquitto/data
-      - mosquitto-logs-dev:/mosquitto/log
+      - ./mosquitto/mosquitto.dev.conf:/mosquitto/config/mosquitto.conf
+      - ./certs:/mosquitto/config/certs
 
   influxdb2:
     image: influxdb:2-alpine
@@ -43,6 +42,7 @@ services:
       - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
     volumes:
       - ./telegraf/telegraf.dev.conf:/etc/telegraf/telegraf.conf:ro
+      - ./certs:/etc/telegraf/certs:ro
 
   grafana:
     image: grafana/grafana:latest
@@ -68,6 +68,4 @@ services:
 volumes:
   influxdb2-data:
   nodered-data:
-  mosquitto-data-dev:
-  mosquitto-logs-dev:
   grafana-data:

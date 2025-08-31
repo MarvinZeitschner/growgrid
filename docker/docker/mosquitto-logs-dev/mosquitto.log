@@ -1,0 +1,120 @@
+1756661795: mosquitto version 2.0.22 starting
+1756661795: Config loaded from /mosquitto/config/mosquitto.conf.
+1756661795: Opening ipv4 listen socket on port 8883.
+1756661795: Opening ipv6 listen socket on port 8883.
+1756661795: Error: Unable to load CA certificates. Check cafile "/mosquitto/config/certs/ca.crt".
+1756661795: OpenSSL Error[0]: error:05800088:x509 certificate routines::no certificate or crl found
+1756661795: mosquitto version 2.0.22 starting
+1756661795: Config loaded from /mosquitto/config/mosquitto.conf.
+1756661795: Opening ipv4 listen socket on port 8883.
+1756661795: Opening ipv6 listen socket on port 8883.
+1756661795: Error: Unable to load CA certificates. Check cafile "/mosquitto/config/certs/ca.crt".
+1756661795: OpenSSL Error[0]: error:05800088:x509 certificate routines::no certificate or crl found
+1756661795: mosquitto version 2.0.22 starting
+1756661795: Config loaded from /mosquitto/config/mosquitto.conf.
+1756661795: Opening ipv4 listen socket on port 8883.
+1756661795: Opening ipv6 listen socket on port 8883.
+1756661795: Error: Unable to load CA certificates. Check cafile "/mosquitto/config/certs/ca.crt".
+1756661795: OpenSSL Error[0]: error:05800088:x509 certificate routines::no certificate or crl found
+1756661796: mosquitto version 2.0.22 starting
+1756661796: Config loaded from /mosquitto/config/mosquitto.conf.
+1756661796: Opening ipv4 listen socket on port 8883.
+1756661796: Opening ipv6 listen socket on port 8883.
+1756661796: Error: Unable to load CA certificates. Check cafile "/mosquitto/config/certs/ca.crt".
+1756661796: OpenSSL Error[0]: error:05800088:x509 certificate routines::no certificate or crl found
+1756661797: mosquitto version 2.0.22 starting
+1756661797: Config loaded from /mosquitto/config/mosquitto.conf.
+1756661797: Opening ipv4 listen socket on port 8883.
+1756661797: Opening ipv6 listen socket on port 8883.
+1756661797: Error: Unable to load CA certificates. Check cafile "/mosquitto/config/certs/ca.crt".
+1756661797: OpenSSL Error[0]: error:05800088:x509 certificate routines::no certificate or crl found
+1756661799: mosquitto version 2.0.22 starting
+1756661799: Config loaded from /mosquitto/config/mosquitto.conf.
+1756661799: Opening ipv4 listen socket on port 8883.
+1756661799: Opening ipv6 listen socket on port 8883.
+1756661799: Error: Unable to load CA certificates. Check cafile "/mosquitto/config/certs/ca.crt".
+1756661799: OpenSSL Error[0]: error:05800088:x509 certificate routines::no certificate or crl found
+1756661802: mosquitto version 2.0.22 starting
+1756661802: Config loaded from /mosquitto/config/mosquitto.conf.
+1756661802: Opening ipv4 listen socket on port 8883.
+1756661802: Opening ipv6 listen socket on port 8883.
+1756661802: Error: Unable to load CA certificates. Check cafile "/mosquitto/config/certs/ca.crt".
+1756661802: OpenSSL Error[0]: error:05800088:x509 certificate routines::no certificate or crl found
+1756661808: mosquitto version 2.0.22 starting
+1756661808: Config loaded from /mosquitto/config/mosquitto.conf.
+1756661808: Opening ipv4 listen socket on port 8883.
+1756661808: Opening ipv6 listen socket on port 8883.
+1756661808: Error: Unable to load CA certificates. Check cafile "/mosquitto/config/certs/ca.crt".
+1756661808: OpenSSL Error[0]: error:05800088:x509 certificate routines::no certificate or crl found
+1756661821: mosquitto version 2.0.22 starting
+1756661821: Config loaded from /mosquitto/config/mosquitto.conf.
+1756661821: Opening ipv4 listen socket on port 8883.
+1756661821: Opening ipv6 listen socket on port 8883.
+1756661821: Error: Unable to load CA certificates. Check cafile "/mosquitto/config/certs/ca.crt".
+1756661821: OpenSSL Error[0]: error:05800088:x509 certificate routines::no certificate or crl found
+1756661831: mosquitto version 2.0.22 starting
+1756661831: Config loaded from /mosquitto/config/mosquitto.conf.
+1756661831: Opening ipv4 listen socket on port 8883.
+1756661831: Opening ipv6 listen socket on port 8883.
+1756661831: Error: Unable to load CA certificates. Check cafile "/mosquitto/config/certs/ca.crt".
+1756661831: OpenSSL Error[0]: error:05800088:x509 certificate routines::no certificate or crl found
+1756661831: mosquitto version 2.0.22 starting
+1756661831: Config loaded from /mosquitto/config/mosquitto.conf.
+1756661831: Opening ipv4 listen socket on port 8883.
+1756661831: Opening ipv6 listen socket on port 8883.
+1756661831: Error: Unable to load CA certificates. Check cafile "/mosquitto/config/certs/ca.crt".
+1756661831: OpenSSL Error[0]: error:05800088:x509 certificate routines::no certificate or crl found
+1756661832: mosquitto version 2.0.22 starting
+1756661832: Config loaded from /mosquitto/config/mosquitto.conf.
+1756661832: Opening ipv4 listen socket on port 8883.
+1756661832: Opening ipv6 listen socket on port 8883.
+1756661832: Error: Unable to load CA certificates. Check cafile "/mosquitto/config/certs/ca.crt".
+1756661832: OpenSSL Error[0]: error:05800088:x509 certificate routines::no certificate or crl found
+1756661832: mosquitto version 2.0.22 starting
+1756661832: Config loaded from /mosquitto/config/mosquitto.conf.
+1756661832: Opening ipv4 listen socket on port 8883.
+1756661832: Opening ipv6 listen socket on port 8883.
+1756661832: Error: Unable to load CA certificates. Check cafile "/mosquitto/config/certs/ca.crt".
+1756661832: OpenSSL Error[0]: error:05800088:x509 certificate routines::no certificate or crl found
+1756661833: mosquitto version 2.0.22 starting
+1756661833: Config loaded from /mosquitto/config/mosquitto.conf.
+1756661833: Opening ipv4 listen socket on port 8883.
+1756661833: Opening ipv6 listen socket on port 8883.
+1756661833: Error: Unable to load CA certificates. Check cafile "/mosquitto/config/certs/ca.crt".
+1756661833: OpenSSL Error[0]: error:05800088:x509 certificate routines::no certificate or crl found
+1756661835: mosquitto version 2.0.22 starting
+1756661835: Config loaded from /mosquitto/config/mosquitto.conf.
+1756661835: Opening ipv4 listen socket on port 8883.
+1756661835: Opening ipv6 listen socket on port 8883.
+1756661835: Error: Unable to load CA certificates. Check cafile "/mosquitto/config/certs/ca.crt".
+1756661835: OpenSSL Error[0]: error:05800088:x509 certificate routines::no certificate or crl found
+1756661838: mosquitto version 2.0.22 starting
+1756661838: Config loaded from /mosquitto/config/mosquitto.conf.
+1756661838: Opening ipv4 listen socket on port 8883.
+1756661838: Opening ipv6 listen socket on port 8883.
+1756661838: Error: Unable to load CA certificates. Check cafile "/mosquitto/config/certs/ca.crt".
+1756661838: OpenSSL Error[0]: error:05800088:x509 certificate routines::no certificate or crl found
+1756661845: mosquitto version 2.0.22 starting
+1756661845: Config loaded from /mosquitto/config/mosquitto.conf.
+1756661845: Opening ipv4 listen socket on port 8883.
+1756661845: Opening ipv6 listen socket on port 8883.
+1756661845: Error: Unable to load CA certificates. Check cafile "/mosquitto/config/certs/ca.crt".
+1756661845: OpenSSL Error[0]: error:05800088:x509 certificate routines::no certificate or crl found
+1756661858: mosquitto version 2.0.22 starting
+1756661858: Config loaded from /mosquitto/config/mosquitto.conf.
+1756661858: Opening ipv4 listen socket on port 8883.
+1756661858: Opening ipv6 listen socket on port 8883.
+1756661858: Error: Unable to load CA certificates. Check cafile "/mosquitto/config/certs/ca.crt".
+1756661858: OpenSSL Error[0]: error:05800088:x509 certificate routines::no certificate or crl found
+1756661884: mosquitto version 2.0.22 starting
+1756661884: Config loaded from /mosquitto/config/mosquitto.conf.
+1756661884: Opening ipv4 listen socket on port 8883.
+1756661884: Opening ipv6 listen socket on port 8883.
+1756661884: Error: Unable to load CA certificates. Check cafile "/mosquitto/config/certs/ca.crt".
+1756661884: OpenSSL Error[0]: error:05800088:x509 certificate routines::no certificate or crl found
+1756661935: mosquitto version 2.0.22 starting
+1756661935: Config loaded from /mosquitto/config/mosquitto.conf.
+1756661935: Opening ipv4 listen socket on port 8883.
+1756661935: Opening ipv6 listen socket on port 8883.
+1756661935: Error: Unable to load CA certificates. Check cafile "/mosquitto/config/certs/ca.crt".
+1756661935: OpenSSL Error[0]: error:05800088:x509 certificate routines::no certificate or crl found

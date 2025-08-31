@@ -8,15 +8,11 @@ secrets.h
 
 .env*
 !.env*.example
+.env.dev
 
-# Node-RED
-docker/nodered/.npm/
-docker/nodered/lib/
-docker/nodered/node_modules/
-docker/nodered/.config.*
-docker/nodered/flows_cred.json
-docker/nodered/.flows_cred.json.backup
-docker/nodered/.flows.json.backup
-
-# Mosquitto
 docker/mosquitto/passwd
+docker/certs
+docker/mosquitto-data-dev/
+docker/mosquitto-logs-dev/
+
+main/components/cert_store/certs
