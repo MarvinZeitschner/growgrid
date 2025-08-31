@@ -58,10 +58,6 @@ services:
         condition: service_healthy
       mosquitto:
         condition: service_healthy
-    environment:
-      INFLUXDB_URL: http://influxdb2:8086
-      INFLUXDB_ORG: growgrid
-      INFLUXDB_BUCKET: growgrid
     secrets:
       - influx_token_telegraf
       - mqtt_username
