@@ -1,18 +1,20 @@
 #include "platform_mqtt.h"
 #include "app_config.h"
 #include "cJSON.h"
+#include "cert_store.h" // Include the new component header
 #include "esp_log.h"
 #include "event_bus.h"
 #include "mqtt_client.h"
-#include "cert_store.h" // Include the new component header
 
 #include <stdio.h>
+#include <string.h>
 
 static const char *TAG = "PLATFORM_MQTT";
 static esp_mqtt_client_handle_t s_client = NULL;
 static bool s_mqtt_connected = false;
 
-static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data) {
+static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
+                               int32_t event_id, void *event_data) {
   esp_mqtt_event_handle_t event = event_data;
   switch ((esp_mqtt_event_id_t)event_id) {
   case MQTT_EVENT_CONNECTED:
@@ -32,6 +34,15 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     break;
   case MQTT_EVENT_ERROR:
     ESP_LOGE(TAG, "MQTT_EVENT_ERROR");
+    if (event->error_handle) {
+      ESP_LOGE(TAG, "Last error code reported from esp-tls: 0x%x",
+               event->error_handle->esp_tls_last_esp_err);
+      ESP_LOGE(TAG, "Last tls stack error number: 0x%x",
+               event->error_handle->esp_tls_stack_err);
+      // ESP_LOGE(TAG, "Last captured errno : %d (%s)",
+      // event->error_handle->error_code,
+      // strerror(event->error_handle->error_code));
+    }
     break;
   default:
     break;
@@ -113,13 +124,15 @@ static void mqtt_publisher_task(void *pvParameters) {
   }
 }
 
-esp_err_t platform_mqtt_init(const char *broker_uri, const char *username, const char *password) {
+esp_err_t platform_mqtt_init(const char *broker_uri, const char *username,
+                             const char *password) {
   esp_mqtt_client_config_t mqtt_cfg = {
       .broker.address.uri = broker_uri,
       .credentials.username = username,
       .credentials.authentication.password = password,
       .broker.verification.certificate = (const char *)ca_cert_pem_start,
-      .credentials.authentication.certificate = (const char *)client_cert_pem_start,
+      .credentials.authentication.certificate =
+          (const char *)client_cert_pem_start,
       .credentials.authentication.key = (const char *)client_key_pem_start,
       .session.keepalive = 30,
   };

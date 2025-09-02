@@ -104,7 +104,7 @@ dependencies:
   idf:
     source:
       type: idf
-    version: 5.4.1
+    version: 5.5.1
 direct_dependencies:
 - esp-idf-lib/bmp280
 - esp-idf-lib/i2cdev

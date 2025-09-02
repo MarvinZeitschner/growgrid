@@ -4,11 +4,14 @@
 #include "esp_wifi.h"
 #include "event_bus.h"
 #include "freertos/event_groups.h"
+#include <math.h>
 #include <string.h>
 
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT BIT1
-#define MAX_RETRIES 5
+#define MAX_RETRIES 15
+#define INITIAL_RETRY_DELAY_MS 1000
+#define MAX_RETRY_DELAY_MS 60000
 
 static const char *TAG = "PLATFORM_WIFI";
 static EventGroupHandle_t s_wifi_event_group;
@@ -23,12 +26,20 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     event_t event = {.type = EVENT_TYPE_WIFI_DISCONNECTED};
     event_bus_post(&event, 0);
     if (s_retry_num < MAX_RETRIES) {
+      uint32_t delay_ms =
+          (uint32_t)(INITIAL_RETRY_DELAY_MS * pow(2, s_retry_num));
+      if (delay_ms > MAX_RETRY_DELAY_MS) {
+        delay_ms = MAX_RETRY_DELAY_MS;
+      }
+      // ESP_LOGI(TAG, "Retry %d/%d: Disconnected. Reconnecting in %dms...",
+      // s_retry_num + 1, MAX_RETRIES, delay_ms);
+      vTaskDelay(pdMS_TO_TICKS(delay_ms));
       esp_wifi_connect();
       s_retry_num++;
-      ESP_LOGI(TAG, "Retrying to connect to the AP");
     } else {
       xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
-      ESP_LOGE(TAG, "Connect to the AP failed");
+      ESP_LOGE(TAG, "Failed to connect to the AP after %d retries.",
+               MAX_RETRIES);
     }
   } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
     ip_event_got_ip_t *ip_event = (ip_event_got_ip_t *)event_data;
@@ -50,6 +61,9 @@ esp_err_t platform_wifi_init_sta(const char *ssid, const char *pass) {
   wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
   ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
+  // Disable Wi-Fi power save mode
+  ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
+
   esp_event_handler_instance_t instance_any_id;
   esp_event_handler_instance_t instance_got_ip;
   ESP_ERROR_CHECK(esp_event_handler_instance_register(
@@ -57,10 +71,18 @@ esp_err_t platform_wifi_init_sta(const char *ssid, const char *pass) {
   ESP_ERROR_CHECK(esp_event_handler_instance_register(
       IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL, &instance_got_ip));
 
-  wifi_config_t wifi_config = {0};
-  strncpy((char *)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid) - 1);
+  wifi_config_t wifi_config = {
+      .sta =
+          {
+              .sort_method = WIFI_CONNECT_AP_BY_SIGNAL,
+              .threshold.authmode = WIFI_AUTH_WPA2_PSK,
+              .pmf_cfg = {.capable = true, .required = false},
+          },
+  };
+  strncpy((char *)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid));
   strncpy((char *)wifi_config.sta.password, pass,
-          sizeof(wifi_config.sta.password) - 1);
+          sizeof(wifi_config.sta.password));
+
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
   ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
   ESP_ERROR_CHECK(esp_wifi_start());
