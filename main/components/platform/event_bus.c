@@ -3,6 +3,11 @@
 #include "freertos/semphr.h"
 #include <string.h>
 
+/**
+ * All of this will soon change to the official esp event loop library
+ * https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/system/esp_event.html
+ */
+
 #define MAX_SUBSCRIBERS 10
 #define EVENT_BUS_QUEUE_SIZE 32
 

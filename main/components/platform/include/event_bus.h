@@ -5,6 +5,11 @@
 #include "freertos/queue.h"
 #include "growgrid_types.h"
 
+/**
+ * All of this will soon change to the official esp event loop library
+ * https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/system/esp_event.html
+ */
+
 typedef enum {
   EVENT_TYPE_SENSOR_DATA,
   EVENT_TYPE_WIFI_CONNECTED,
